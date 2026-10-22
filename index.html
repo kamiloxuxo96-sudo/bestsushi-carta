@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Carta Bestsushi: sushi hecho en casa en Paredones. Arma tu pedido y envíalo por WhatsApp.">
+<link rel="icon" href="marca/koi.png">
+<title>Bestsushi · Carta</title>
+<meta name="theme-color" content="#1B5FD4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+/* Concepto: "agua de koi". Un solo azul de marca sobre blanco frío; la comida manda.
+   Arriba: foto del Roll del mes a sangre con borde de ola. Abajo: carta en filas tipo app de delivery
+   (texto a la izquierda, foto a la derecha con botón +). Pedido en hoja inferior → WhatsApp. */
+:root{
+  color-scheme:light;
+  --blue:#1B5FD4;      /* azul Bestsushi */
+  --blue-ink:#0A2A6B;  /* azul profundo para texto destacado */
+  --ink:#0E1A33;       /* texto */
+  --muted:#5B6B87;     /* texto secundario */
+  --paper:#F2F5FB;     /* fondo frío */
+  --card:#FFFFFF;
+  --line:#DDE5F2;
+  --wa:#1FA855;        /* verde WhatsApp, solo en el botón final */
+  --font:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-drawer:cubic-bezier(.32,.72,0,1);
+  --r-lg:22px;--r-md:16px;--r-sm:12px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:72px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+img{max-width:100%;display:block}
+.press{transition:transform 140ms var(--ease-out)}
+.press:active{transform:scale(.96)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- CABECERA + DESTACADOS ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 6px;padding-top:calc(14px + env(safe-area-inset-top,0px));max-width:720px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo .mark{width:42px;height:42px;border-radius:50%;background:var(--blue);display:grid;place-items:center;flex-shrink:0}
+.koi{width:34px;height:24px;background:#fff;-webkit-mask:url('marca/koi.png') center/contain no-repeat;mask:url('marca/koi.png') center/contain no-repeat;flex-shrink:0}
+.logo .mark .koi{width:30px;height:21px}
+.word{width:118px;height:23px;background:var(--blue-ink);-webkit-mask:url('marca/bestsushi.png') left center/contain no-repeat;mask:url('marca/bestsushi.png') left center/contain no-repeat}
+.brand{display:inline-flex;align-items:center;gap:10px;background:var(--blue);padding:7px 14px 7px 9px;border-radius:999px;color:#fff}
+.brand b{font-weight:800;font-size:13px;letter-spacing:.22em}
+.status{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
+.status i{width:8px;height:8px;border-radius:50%;background:#22B061;box-shadow:0 0 0 4px rgba(34,176,97,.18)}
+.status.closed i{background:#F59E0B;box-shadow:0 0 0 4px rgba(245,158,11,.2)}
+.intro{max-width:720px;margin:0 auto;padding:14px 16px 0}
+.intro h1{margin:0;font-weight:900;font-size:clamp(25px,7vw,44px);text-wrap:balance;line-height:.98;letter-spacing:-.03em;text-transform:uppercase}
+.intro h1 span{font-weight:300;display:block}
+.intro p{margin:8px 0 0;color:var(--muted);font-size:14px;max-width:36ch}
+/* ---------- ESTANQUE (firma de la página) ---------- */
+.pond{position:relative;background:radial-gradient(120% 90% at 85% 0%,#2E74EA 0%,var(--blue) 45%,#1449B8 100%);color:#fff;padding-bottom:132px;overflow:hidden;isolation:isolate;touch-action:pan-y}
+.pond canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.pond .logo .mark{background:#fff}
+.pond .logo .mark .koi{background:var(--blue)}
+.pond .word{background:#fff}
+.pond .status{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.pond .intro p{color:rgba(255,255,255,.88)}
+.pond .intro,.pond .top{position:relative;z-index:1}
+.pond .hint{max-width:720px;margin:14px auto 0;padding:0 16px;font-size:12px;font-weight:600;color:rgba(255,255,255,.6)}
+.feat{margin-top:-118px!important;position:relative;z-index:2}
+.feat{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:16px 16px 6px;max-width:720px;margin:0 auto;scroll-padding:0 16px}
+.feat::-webkit-scrollbar{display:none}
+.fcard{position:relative;flex:0 0 76%;max-width:300px;aspect-ratio:4/5;border:0;padding:0;border-radius:24px;overflow:hidden;scroll-snap-align:start;color:#fff;text-align:left;background:#1449B8 center/cover;box-shadow:0 14px 30px rgba(14,26,51,.18)}
+.fcard::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,20,52,0) 45%,rgba(6,20,52,.85) 100%)}
+.fcard .tag{position:absolute;top:12px;left:12px;z-index:1;background:#fff;color:var(--blue-ink);font-size:12px;font-weight:800;padding:6px 11px;border-radius:999px}
+.fcard .tag.blue{background:var(--blue);color:#fff}
+.fcard .bd{position:absolute;left:16px;right:16px;bottom:16px;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.fcard h3{margin:0;font-weight:900;font-size:24px;line-height:.98;letter-spacing:-.02em;text-transform:uppercase}
+.fcard h3 span{display:block;font-weight:300}
+.fcard .p{display:block;margin-top:6px;font-weight:700;font-size:15px;opacity:.95}
+.fcard .plus{width:44px;height:44px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;font-size:26px;font-weight:600;flex-shrink:0}
+
+/* ---------- INFO ---------- */
+.info{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 16px 4px;margin-top:-4px}
+.info::-webkit-scrollbar{display:none}
+.info span{flex-shrink:0;font-size:12.5px;font-weight:600;color:var(--blue-ink);background:#E3EBFA;padding:7px 12px;border-radius:999px}
+
+/* ---------- TABS ---------- */
+.tabs{position:sticky;top:0;z-index:20;background:rgba(242,245,251,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.tabs-in{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:10px 12px;scroll-behavior:smooth}
+.tabs-in::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;border:0;background:transparent;padding:9px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);transition:background-color 200ms ease,color 200ms ease}
+.tab[aria-current="true"]{background:var(--blue);color:#fff}
+
+/* ---------- MENU ---------- */
+main{max-width:720px;margin:0 auto;padding:6px 0 140px}
+.sec{padding:22px 16px 6px}
+.sec h2{margin:0;font-weight:900;font-size:26px;letter-spacing:-.02em;line-height:1.05;text-transform:uppercase}
+.sec h2 span{font-weight:300}
+.sec .note{margin:6px 0 12px;color:var(--muted);font-size:13.5px}
+.list{background:var(--card);border-radius:var(--r-lg);border:1px solid var(--line);overflow:hidden}
+.item{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:none;border:0;padding:14px;position:relative}
+.item + .item{border-top:1px solid var(--line)}
+.item .tx{flex:1;min-width:0}
+.item h3{margin:0 0 3px;font-size:16px;font-weight:700;letter-spacing:-.005em}
+.item .d{margin:0 0 8px;color:var(--muted);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .pr{font-weight:800;font-size:15px}
+.item .pr small{font-weight:600;color:var(--muted);font-size:12px;margin-left:6px}
+.thumb{position:relative;width:104px;height:104px;flex-shrink:0;border-radius:var(--r-md);overflow:hidden;background:linear-gradient(145deg,#2B6FE0,#1449B8)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .koi{position:absolute;inset:0;margin:auto;width:58px;height:42px;opacity:.9}
+.add{position:absolute;right:6px;bottom:6px;width:34px;height:34px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;font-size:22px;font-weight:600;line-height:1;box-shadow:0 4px 12px rgba(6,20,52,.25)}
+.qbadge{position:absolute;left:6px;top:6px;min-width:24px;height:24px;padding:0 7px;border-radius:999px;background:var(--blue);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;border:2px solid #fff}
+.item.compact .thumb{width:64px;height:64px;border-radius:var(--r-sm)}
+.item.compact .thumb .koi{width:38px;height:27px}
+.item.compact .add{width:30px;height:30px;font-size:19px;right:4px;bottom:4px}
+
+/* promos: tarjetas horizontales */
+.promos{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 16px 8px;margin:0 -16px}
+.promos::-webkit-scrollbar{display:none}
+.promo{scroll-snap-align:start;flex:0 0 min(78vw,330px);border:0;text-align:left;border-radius:var(--r-lg);overflow:hidden;background:var(--blue);color:#fff;display:flex;flex-direction:column;position:relative}
+.promo .ph{height:150px;background:#1449B8 center/cover}
+.promo .ph .koi{width:90px;height:64px;margin:40px auto 0;opacity:.35}
+.promo .bd{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.promo .big{font-weight:900;font-size:44px;line-height:.9;letter-spacing:-.03em}
+.promo .big span{font-weight:300;font-size:20px;letter-spacing:0;margin-left:6px}
+.promo .d{font-size:12.5px;opacity:.85;line-height:1.4;flex:1}
+.promo .row{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.promo .pr{font-weight:800;font-size:20px}
+.promo .plus{width:38px;height:38px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;font-size:22px;font-weight:600}
+
+footer{max-width:720px;margin:24px auto 0;padding:24px 18px 160px;color:var(--muted);font-size:13px;display:grid;gap:14px}
+footer .brand{justify-self:start}
+footer a{color:var(--blue-ink);font-weight:700;text-decoration:none}
+
+/* ---------- ARMA TU ROLL ---------- */
+.build{max-width:720px;margin:0 auto;padding:22px 16px 4px}
+.build-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.build-card > *{min-width:0}
+.build-top{display:flex;gap:14px;align-items:center}
+.build svg{width:128px;height:128px;flex-shrink:0;filter:drop-shadow(0 8px 14px rgba(14,26,51,.22))}
+.build svg *{transition:fill 260ms ease,opacity 260ms ease,transform 380ms var(--ease-out);transform-box:fill-box;transform-origin:center}
+.build svg .pop{transform:scale(.4);opacity:0}
+.build svg .on{transform:scale(1);opacity:1}
+.build-tx h2{margin:0;font-weight:900;font-size:24px;letter-spacing:-.02em;text-transform:uppercase;line-height:1}
+.build-tx h2 span{font-weight:300}
+.build-tx{min-width:0}
+.build-tx p{margin:6px 0 0;color:var(--muted);font-size:13px}
+.build-tx .pr{margin-top:8px;font-weight:800;font-size:20px;color:var(--blue-ink)}
+.bstep h4{margin:0 0 8px;font-size:13.5px;font-weight:700;display:flex;gap:8px;align-items:center}
+.bstep h4 i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:12px}
+.bstep .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px}
+.bstep .chips::-webkit-scrollbar{display:none}
+.chip small{font-weight:600;opacity:.7;margin-left:4px}
+/* ---------- RULETA / REPETIR ---------- */
+.intro-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.ghost{border:1.5px solid rgba(255,255,255,.45);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:10px 16px;font-weight:700;font-size:13.5px;display:inline-flex;gap:8px;align-items:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.again{max-width:720px;margin:12px auto 0;padding:0 16px}
+.again-in{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 12px 12px 14px}
+.again-in .tx{flex:1;min-width:0}
+.again-in b{display:block;font-size:14px}
+.again-in small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.again-in .btn{padding:10px 14px;font-size:13.5px;background:var(--blue);color:#fff}
+.slot{position:relative;margin:14px -2px 0;height:280px;border-radius:22px;overflow:hidden;background:#0E1A33}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slot .lab{position:absolute;left:0;right:0;bottom:0;padding:40px 16px 14px;background:linear-gradient(transparent,rgba(6,20,52,.85));color:#fff}
+.slot .lab b{display:block;font-weight:900;font-size:24px;text-transform:uppercase;letter-spacing:-.02em}
+.slot.spinning img{filter:blur(2px) saturate(1.2)}
+.slot .koi{position:absolute;inset:0;margin:auto;width:110px;height:80px;opacity:.5}
+.spin-row{display:flex;gap:10px;margin-top:4px}
+.spin-row .btn{flex:1;justify-content:center}
+.btn-line{background:var(--paper);color:var(--blue-ink)}
+/* ---------- CELEBRACIÓN ---------- */
+.party{position:fixed;inset:0;z-index:90;background:radial-gradient(120% 90% at 50% 30%,#2E74EA,var(--blue) 50%,#123F9C);color:#fff;display:grid;place-items:center;text-align:center;padding:24px;opacity:0;pointer-events:none;transition:opacity 260ms ease}
+.party.on{opacity:1;pointer-events:auto}
+.orbit{position:relative;width:220px;height:220px;margin:0 auto 18px}
+.orbit .ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);animation:ring 1.6s var(--ease-out) infinite}
+.orbit .ring:nth-child(2){animation-delay:.5s}
+@keyframes ring{from{transform:scale(.5);opacity:1}to{transform:scale(1.25);opacity:0}}
+.orbit .spin{position:absolute;inset:0;animation:orb 2.4s linear infinite}
+.orbit .koi{position:absolute;width:150px;height:105px;left:35px;top:57px}
+@keyframes orb{to{transform:rotate(360deg)}}
+.party h2{margin:0;font-weight:900;font-size:34px;text-transform:uppercase;letter-spacing:-.02em;line-height:1}
+.party h2 span{display:block;font-weight:300}
+.party p{margin:10px auto 22px;max-width:30ch;opacity:.88}
+.party .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.party .btn{background:#fff;color:var(--blue-ink)}
+.party .btn.alt{background:rgba(255,255,255,.14);color:#fff;border:1.5px solid rgba(255,255,255,.4)}
+.fcard .tag small{font-weight:600;opacity:.85;margin-left:4px}
+
+/* ---------- BARRA PEDIDO ---------- */
+.bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;max-width:560px;margin:0 auto;border:0;border-radius:999px;background:var(--blue);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 20px;box-shadow:0 14px 36px rgba(20,73,184,.45);transform:translateY(160%);transition:transform 380ms var(--ease-drawer)}
+.bar.show{transform:none}
+.bar{padding:8px 8px 8px 10px!important}
+.stack{position:relative;display:flex;align-items:center;flex-shrink:0;min-height:40px;padding:3px 6px;border-radius:999px;background:linear-gradient(180deg,#24352A,#0E1A12 70%,#1A2A1F);box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 2px 6px rgba(0,0,0,.3);transition:padding 300ms var(--ease-out)}
+.stack:empty{display:none}
+.stack > *{width:30px;height:30px;border-radius:50%;border:2.5px solid #F4F1EA;box-shadow:0 0 0 2px #0E1A12;margin-left:3px;object-fit:cover;background:#1449B8;display:grid;place-items:center;flex-shrink:0;transition:transform 260ms var(--ease-out)}
+.stack > *:first-child{margin-left:0}
+.stack .koi{width:22px;height:16px;border:0;margin:0}
+.stack .more{background:#F4F1EA;color:#0E1A12;font-weight:800;font-size:11.5px}
+.stack .new{animation:land 420ms var(--ease-out)}
+@keyframes land{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.bar.catch .stack{animation:dip 380ms var(--ease-out)}
+@keyframes dip{40%{transform:translateY(3px) scale(.96)}}
+.flyer{position:fixed;z-index:70;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:#1449B8 center/cover;border:3px solid #fff;box-shadow:0 10px 24px rgba(8,18,40,.35);pointer-events:none;display:grid;place-items:center;left:0;top:0}
+.flyer .koi{width:34px;height:24px}
+.board{position:relative;margin:4px -4px 14px;padding:16px 14px 14px;border-radius:20px;background:radial-gradient(140% 120% at 20% 0%,#3A4350 0%,#232A33 55%,#1B2129 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.06),inset 0 -6px 16px rgba(0,0,0,.35),0 10px 24px rgba(14,26,51,.18);color:#fff}
+.board::before{content:'';position:absolute;inset:0;border-radius:inherit;background:repeating-linear-gradient(105deg,rgba(255,255,255,.018) 0 2px,transparent 2px 7px);pointer-events:none}
+.board-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.7)}
+.board-h b{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.01em}
+.brow{display:flex;flex-wrap:wrap;align-items:center;gap:0;padding:6px 0}
+.brow + .brow{border-top:1px dashed rgba(255,255,255,.12)}
+.pc{width:30px;height:30px;border-radius:50%;margin-right:-5px;background:#1449B8 center/320% no-repeat;box-shadow:0 3px 6px rgba(0,0,0,.45),inset 0 0 0 2px rgba(255,255,255,.55);display:grid;place-items:center;animation:drop 420ms var(--ease-out) both}
+.pc .koi{width:17px;height:12px}
+.pc.can{border-radius:8px;width:20px;height:34px;margin-right:4px;background:linear-gradient(90deg,#B71C1C,#E53935 50%,#B71C1C)}
+.pc.bowl{width:38px;height:38px;margin-right:4px}
+.brow small{margin-left:12px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.65);white-space:nowrap}
+@keyframes drop{from{opacity:0;transform:translateY(-14px) scale(.7)}to{opacity:1;transform:none}}
+.c-thumb{width:54px;height:54px;border-radius:14px;object-fit:cover;flex-shrink:0;background:#1449B8;display:grid;place-items:center}
+.c-thumb .koi{width:30px;height:21px}
+.bar .cnt{min-width:30px;height:30px;padding:0 8px;border-radius:999px;background:#fff;color:var(--blue);font-weight:800;display:grid;place-items:center;font-size:14px}
+.bar .lbl{flex:1;min-width:0;text-align:left;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .tot{font-weight:800;background:rgba(255,255,255,.16);padding:10px 16px;border-radius:999px}
+.bar.bump .cnt{animation:bump 360ms var(--ease-out)}
+@keyframes bump{40%{transform:scale(1.28)}}
+
+/* ---------- HOJAS ---------- */
+.scrim{position:fixed;inset:0;background:rgba(8,18,40,.5);z-index:50;opacity:0;pointer-events:none;transition:opacity 260ms ease}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;max-width:600px;margin:0 auto;background:var(--card);border-radius:26px 26px 0 0;max-height:92svh;display:flex;flex-direction:column;transform:translateY(105%);transition:transform 420ms var(--ease-drawer);box-shadow:0 -20px 50px rgba(8,18,40,.25)}
+.sheet.on{transform:none}
+.grab{width:42px;height:5px;border-radius:99px;background:#CBD5E6;margin:10px auto 0;flex-shrink:0}
+.sh-scroll{overflow-y:auto;overscroll-behavior:contain;padding:0 18px 12px}
+.sh-foot{padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--card)}
+.close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.92);font-size:20px;display:grid;place-items:center;box-shadow:0 2px 10px rgba(8,18,40,.15);z-index:2}
+.pd-photo{margin:12px -18px 0;aspect-ratio:1/1;max-height:52svh;background:linear-gradient(145deg,#2B6FE0,#1449B8) center/cover;display:grid;place-items:center}
+.pd-photo .koi{width:120px;height:86px;opacity:.5}
+.pd-photo{position:relative;overflow:hidden}
+.gal{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;align-self:stretch}
+.gal::-webkit-scrollbar{display:none}
+.gal img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center}
+.dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:6px}
+.dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.55);transition:background-color 200ms ease,transform 200ms ease}
+.dots span.on{background:#fff;transform:scale(1.25)}
+.nph{position:absolute;left:6px;bottom:6px;background:rgba(10,20,45,.6);color:#fff;font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:999px}
+.pd-h{margin:16px 0 4px;font-weight:900;font-size:26px;letter-spacing:-.02em;text-transform:uppercase;line-height:1.05}
+.pd-d{margin:0 0 6px;color:var(--muted);font-size:14px}
+.grp{margin-top:18px}
+.grp h4{margin:0 0 10px;font-size:14px;font-weight:700;display:flex;justify-content:space-between}
+.grp h4 small{color:var(--muted);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:10px 16px;font-weight:600;font-size:14px;transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease}
+.chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.grp.err h4{color:#C2410C}
+.grp.err .chips{animation:shake 300ms}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.foot-row{display:flex;gap:12px;align-items:center}
+.step{display:flex;align-items:center;gap:4px;background:var(--paper);border-radius:999px;padding:4px}
+.step button{width:38px;height:38px;border-radius:50%;border:0;background:#fff;font-size:20px;font-weight:600;display:grid;place-items:center;box-shadow:0 1px 3px rgba(8,18,40,.12)}
+.step output{min-width:26px;text-align:center;font-weight:800}
+.btn{text-decoration:none;border:0;border-radius:999px;padding:14px 22px;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:8px}
+.btn-blue{background:var(--blue);color:#fff;flex:1;justify-content:space-between;padding:16px 22px}
+.btn-wa{background:var(--wa);color:#fff;width:100%;justify-content:center;padding:17px 22px;font-size:16px}
+.btn-wa svg{width:22px;height:22px}
+
+/* carrito */
+.c-h{margin:16px 0 8px;font-weight:900;font-size:24px;text-transform:uppercase;letter-spacing:-.02em}
+.c-item{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.c-item .tx{flex:1;min-width:0}
+.c-item b{display:block;font-size:15px}
+.c-item small{display:block;color:var(--muted);font-size:12.5px}
+.c-item .p{font-weight:800;font-size:14px;margin-top:2px}
+.c-item .step button{width:32px;height:32px;font-size:17px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--paper);border-radius:14px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;border-radius:11px;padding:12px;font-weight:700;color:var(--muted);transition:background-color 180ms ease,color 180ms ease}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--blue-ink);box-shadow:0 1px 4px rgba(8,18,40,.12)}
+.fld{display:grid;gap:6px;margin-top:12px}
+.fld label{font-size:13px;font-weight:700}
+.fld input,.fld textarea{font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;background:#fff;color:var(--ink);width:100%}
+.fld input:focus,.fld textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,95,212,.18)}
+.fld.err input{border-color:#C2410C}
+.fld .msg{font-size:12.5px;color:#C2410C;display:none}
+.fld.err .msg{display:block}
+.sum{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 4px}
+.sum b{font-size:22px;font-weight:900}
+.small{font-size:12.5px;color:var(--muted)}
+.empty{text-align:center;padding:30px 10px;color:var(--muted)}
+.empty .koi{background:var(--blue);margin:0 auto 12px;width:80px;height:58px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:45;transform:translate(-50%,12px);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;transition:opacity 200ms ease,transform 260ms var(--ease-out);pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (min-width:760px){
+  .hero{min-height:560px}
+  .hero-copy{max-width:720px;margin:0 auto;width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition-duration:1ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="pond" id="pond">
+<canvas id="koiCanvas" aria-hidden="true"></canvas>
+<header class="top" id="top">
+  <a class="logo" href="#top" aria-label="Bestsushi"><span class="mark"><span class="koi" aria-hidden="true"></span></span><span class="word" aria-hidden="true"></span></a>
+  <span class="status" id="status"><i></i><span id="statusTxt">Mar a Dom · 17:00–22:30</span></span>
+</header>
+<section class="intro" aria-label="Destacados">
+  <h1>Sushi hecho en casa <span>en Paredones</span></h1>
+  <p>Elige, arma tu pedido y envíalo por WhatsApp. Delivery y retiro.</p>
+  <div class="intro-actions"><button class="ghost press" type="button" id="spinOpen">🎲 No sé qué pedir</button><button class="ghost press" type="button" data-go="arma">Arma tu roll</button></div>
+</section>
+<p class="hint" aria-hidden="true">Toca el agua</p>
+</div>
+<div class="feat" id="feat"></div>
+<div class="again" id="again" hidden></div>
+
+
+<section class="build" id="arma" aria-labelledby="buildH">
+  <div class="build-card">
+    <div class="build-top">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="56" id="bWrap" fill="#E9A23B"/>
+        <circle cx="60" cy="60" r="47" fill="#F7F4EC"/>
+        <circle cx="60" cy="60" r="31" fill="#17241B"/>
+        <circle cx="60" cy="60" r="28" fill="#FFFDF7"/>
+        <ellipse cx="50" cy="56" rx="13" ry="11" id="bProt" class="pop" fill="#F2A27A"/>
+        <ellipse cx="71" cy="66" rx="9" ry="12" id="bVeg" class="pop" fill="#8DBF4E"/>
+        <g id="bDots" opacity=".55"></g>
+      </svg>
+      <div class="build-tx"><h2 id="buildH">Arma tu <span>roll</span></h2><p id="bDesc">Elige envoltura, proteína y vegetal. 10 piezas con queso crema.</p><div class="pr" id="bPrice">desde $4.300</div></div>
+    </div>
+    <div class="bstep"><h4><i>1</i>Envoltura</h4><div class="chips" id="bS1"></div></div>
+    <div class="bstep"><h4><i>2</i>Proteína</h4><div class="chips" id="bS2"></div></div>
+    <div class="bstep"><h4><i>3</i>Vegetal</h4><div class="chips" id="bS3"></div></div>
+    <button class="btn btn-blue press" type="button" id="bAdd" style="width:100%"><span>Agregar mi roll</span><span id="bTot">—</span></button>
+  </div>
+</section>
+
+<nav class="tabs" aria-label="Categorías"><div class="tabs-in" id="tabs"></div></nav>
+
+<main id="menu"></main>
+
+<footer>
+  <span class="brand"><span class="koi" aria-hidden="true"></span><b style="color:#fff">BESTSUSHI</b></span>
+  <div>Sushi hecho en casa en Paredones. Delivery y retiro, martes a domingo de 17:00 a 22:30.</div>
+  <div>Pedidos por WhatsApp <a href="https://wa.me/56937415423" target="_blank" rel="noopener">+56 9 3741 5423</a> · Instagram <a href="https://instagram.com/bestsushi.cl" target="_blank" rel="noopener">@bestsushi.cl</a></div>
+  <div class="small">Los rellenos de las promociones se pueden cambiar con costo adicional. El delivery se cobra aparte según el sector.</div>
+</footer>
+
+<button class="bar press" id="bar" type="button" aria-label="Ver mi pedido">
+  <span class="stack" id="stack" aria-hidden="true"></span><span class="lbl">Pedido <span id="barCnt" style="opacity:.75;font-weight:600">0</span></span><span class="tot" id="barTot">$0</span>
+</button>
+
+<div class="scrim" id="scrim"></div>
+
+<section class="sheet" id="pd" role="dialog" aria-modal="true" aria-labelledby="pdName" hidden>
+  <button class="close press" type="button" data-close aria-label="Cerrar">✕</button>
+  <div class="grab"></div>
+  <div class="sh-scroll">
+    <div class="pd-photo" id="pdPhoto"></div>
+    <h3 class="pd-h" id="pdName"></h3>
+    <p class="pd-d" id="pdDesc"></p>
+    <div id="pdOpts"></div>
+    <div class="fld"><label for="pdNote">Algo que debamos saber (opcional)</label><input id="pdNote" placeholder="Ej: sin cebollín" autocomplete="off"></div>
+  </div>
+  <div class="sh-foot foot-row">
+    <div class="step" aria-label="Cantidad"><button type="button" class="press" id="pdMinus" aria-label="Quitar uno">−</button><output id="pdQty">1</output><button type="button" class="press" id="pdPlus" aria-label="Agregar uno">+</button></div>
+    <button class="btn btn-blue press" id="pdAdd" type="button"><span>Agregar</span><span id="pdTotal"></span></button>
+  </div>
+</section>
+
+<section class="sheet" id="cart" role="dialog" aria-modal="true" aria-labelledby="cartH" hidden>
+  <button class="close press" type="button" data-close aria-label="Cerrar">✕</button>
+  <div class="grab"></div>
+  <div class="sh-scroll" id="cartBody"></div>
+  <div class="sh-foot" id="cartFoot"></div>
+</section>
+
+<section class="sheet" id="spin" role="dialog" aria-modal="true" aria-labelledby="spinH" hidden>
+  <button class="close press" type="button" data-close aria-label="Cerrar">✕</button>
+  <div class="grab"></div>
+  <div class="sh-scroll"><h3 class="c-h" id="spinH">¿Qué pido hoy?</h3><p class="small" style="margin:0">Deja que la carta elija por ti.</p>
+    <div class="slot" id="slot"><img id="slotImg" alt=""><div class="lab"><b id="slotName">Gira la carta</b><span id="slotPrice"></span></div></div></div>
+  <div class="sh-foot spin-row"><button class="btn btn-line press" type="button" id="spinGo">Girar otra vez</button><button class="btn btn-blue press" type="button" id="spinAdd" style="justify-content:center">Lo quiero</button></div>
+</section>
+
+<div class="party" id="party" role="dialog" aria-modal="true" aria-labelledby="partyH">
+  <div>
+    <div class="orbit" aria-hidden="true"><span class="ring"></span><span class="ring"></span><div class="spin"><span class="koi"></span></div></div>
+    <h2 id="partyH">¡Pedido <span>listo!</span></h2>
+    <p>Envía el mensaje en WhatsApp y te confirmamos el pedido. Gracias por elegir Bestsushi.</p>
+    <div class="row"><button class="btn press" type="button" id="partyDone">Empezar otro pedido</button><button class="btn alt press" type="button" id="partyBack">Volver a la carta</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="menu.js"></script>
+<script>
+/* ======================= LÓGICA ======================= */
+const $ = s => document.querySelector(s);
+const fmt = n => '$' + n.toLocaleString('es-CL');
+MENU.forEach(c => c.items = c.items.filter(i => !i.oculto));
+const ITEMS = {}; MENU.forEach(c => c.items.forEach(i => ITEMS[i.id] = {...i, cat:c.id}));
+const esc = s => String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const KEY = 'bestsushi-pedido-v1';
+let cart = []; try { cart = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch(e) {} };
+let form = {mode:'delivery', name:'', addr:'', pay:'Transferencia', note:''};
+
+const koi = cls => `<span class="koi ${cls||''}" aria-hidden="true"></span>`;
+const pics = i => i.imgs || (i.img ? [i.img] : []);
+const photoStyle = i => pics(i).length ? `background-image:url('${IMG}${pics(i)[0]}.jpg')` : '';
+
+/* estado abierto/cerrado */
+(function(){
+  const now = new Date(), d = now.getDay(), m = now.getHours()*60 + now.getMinutes();
+  const [oh,om] = HOURS.open.split(':').map(Number), [ch,cm] = HOURS.close.split(':').map(Number);
+  const open = HOURS.days.includes(d) && m >= oh*60+om && m < ch*60+cm;
+  $('#statusTxt').textContent = open ? `Abierto · hasta las ${HOURS.close}` : (HOURS.days.includes(d) && m < oh*60+om ? `Abre hoy ${HOURS.open}` : 'Cerrado · Mar a Dom 17:00');
+  if (!open) $('#status').classList.add('closed');
+})();
+
+/* estanque: koi de línea nadando (mismo trazo que el logo); tocar crea ondas y los koi se apartan */
+(function(){
+  const cv = document.getElementById('koiCanvas'), pond = document.getElementById('pond'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W = 0, H = 0, dpr = Math.min(2, window.devicePixelRatio || 1), running = true, ripples = [];
+  function size(){ const r = pond.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  size(); addEventListener('resize', size);
+  const N = 16, SEG = 7;
+  function makeKoi(s){ const k = {x:Math.random()*W, y:Math.random()*H*0.8, a:Math.random()*6.28, v:0.7+Math.random()*0.4, s, t:Math.random()*100, pts:[], flee:0};
+    for (let i=0;i<N;i++) k.pts.push({x:k.x, y:k.y}); return k; }
+  const kois = [makeKoi(1.35), makeKoi(1.05), makeKoi(0.8)];
+  function step(k){
+    k.t += 0.016;
+    // deriva suave + vuelve hacia el centro si se acerca al borde
+    const cx = W/2 - k.x, cy = H*0.45 - k.y, toC = Math.atan2(cy, cx), d = Math.hypot(cx, cy);
+    let turn = Math.sin(k.t*0.9 + k.s*3) * 0.025;
+    if (d > Math.min(W,H)*0.42) turn += Math.sign(Math.sin(toC - k.a)) * 0.03;
+    if (lure && performance.now() - lure.t < 1600 && !k.flee){ const la = Math.atan2(lure.y - k.y, lure.x - k.x); turn += Math.sin(la - k.a) * 0.09 * k.s; }
+    k.a += turn; const sp = k.v * (1 + k.flee*2.2 + (lure && performance.now() - lure.t < 1600 ? 0.6 : 0)); k.flee = k.flee > 0.02 ? k.flee*0.96 : 0;
+    k.x += Math.cos(k.a)*sp; k.y += Math.sin(k.a)*sp;
+    k.pts[0].x = k.x; k.pts[0].y = k.y;
+    for (let i=1;i<N;i++){ const p = k.pts[i], q = k.pts[i-1], dx = p.x-q.x, dy = p.y-q.y, L = Math.hypot(dx,dy)||1, g = SEG*k.s;
+      p.x = q.x + dx/L*g; p.y = q.y + dy/L*g; }
+  }
+  function width(i,s){ const u = i/(N-1); return (u < 0.18 ? 6 + u*40 : 13.2*Math.pow(1-u, 1.25) + 1.2) * s; }
+  function draw(k){
+    const L = [], R = [];
+    for (let i=0;i<N;i++){ const p = k.pts[i], q = k.pts[Math.min(i+1,N-1)], o = k.pts[Math.max(i-1,0)];
+      const ang = Math.atan2(o.y - q.y, o.x - q.x) + (i===0?0:0), nx = -Math.sin(ang), ny = Math.cos(ang), w = width(i,k.s);
+      const sw = Math.sin(k.t*6 - i*0.5) * (i/N) * 2.2 * k.s;
+      L.push([p.x + nx*(w+sw*0.2), p.y + ny*(w+sw*0.2)]); R.push([p.x - nx*(w-sw*0.2), p.y - ny*(w-sw*0.2)]); }
+    ctx.lineWidth = 1.9; ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineJoin = ctx.lineCap = 'round';
+    // cuerpo
+    ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]);
+    for (let i=1;i<N;i++) ctx.lineTo(L[i][0], L[i][1]);
+    for (let i=N-1;i>=0;i--) ctx.lineTo(R[i][0], R[i][1]);
+    ctx.closePath(); ctx.stroke();
+    // línea del lomo
+    ctx.beginPath(); ctx.moveTo(k.pts[3].x, k.pts[3].y); for (let i=4;i<N-2;i++) ctx.lineTo(k.pts[i].x, k.pts[i].y);
+    ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,.7)';
+    // cola en abanico
+    const t = k.pts[N-1], t2 = k.pts[N-3], ta = Math.atan2(t.y - t2.y, t.x - t2.x), fl = 22*k.s, wag = Math.sin(k.t*6 - N*0.5)*0.35;
+    [-0.55, 0.55].forEach(sg => { const a = ta + sg + wag; ctx.beginPath(); ctx.moveTo(t.x, t.y);
+      ctx.quadraticCurveTo(t.x + Math.cos(ta+wag)*fl*0.6, t.y + Math.sin(ta+wag)*fl*0.6, t.x + Math.cos(a)*fl, t.y + Math.sin(a)*fl);
+      ctx.quadraticCurveTo(t.x + Math.cos(ta+wag)*fl*0.35, t.y + Math.sin(ta+wag)*fl*0.35, t.x, t.y); ctx.stroke(); });
+    // aletas pectorales
+    const p = k.pts[4], p2 = k.pts[3], pa = Math.atan2(p.y - p2.y, p.x - p2.x), fw = Math.sin(k.t*4)*0.25;
+    [1,-1].forEach(sg => { const a = pa + sg*(1.1 + fw), bx = p.x + Math.cos(pa + sg*1.57)*width(4,k.s), by = p.y + Math.sin(pa + sg*1.57)*width(4,k.s);
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx + Math.cos(a)*14*k.s, by + Math.sin(a)*14*k.s, bx + Math.cos(pa)*12*k.s, by + Math.sin(pa)*12*k.s); ctx.stroke(); });
+    // ojos
+    const h = k.pts[1], ha = Math.atan2(k.pts[0].y - h.y, k.pts[0].x - h.x);
+    [1,-1].forEach(sg => { ctx.beginPath(); ctx.arc(h.x + Math.cos(ha + sg*1.2)*5*k.s, h.y + Math.sin(ha + sg*1.2)*5*k.s, 1.1*k.s, 0, 6.28); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fill(); });
+  }
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    ripples = ripples.filter(r => r.r < r.max);
+    ripples.forEach(r => { r.r += 2.2; const a = 1 - r.r/r.max; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 6.28); ctx.strokeStyle = `rgba(255,255,255,${0.5*a})`; ctx.lineWidth = 1.4; ctx.stroke();
+      if (r.r > 18){ ctx.beginPath(); ctx.arc(r.x, r.y, r.r-18, 0, 6.28); ctx.strokeStyle = `rgba(255,255,255,${0.25*a})`; ctx.stroke(); } });
+    kois.forEach(k => { step(k); draw(k); });
+    if (running && !reduce) requestAnimationFrame(frame);
+  }
+  let lure = null;
+  const follow = (x0, y0) => { const r = pond.getBoundingClientRect(); lure = {x: x0 - r.left, y: y0 - r.top, t: performance.now()}; };
+  pond.addEventListener('touchmove', e => { const t = e.touches[0]; follow(t.clientX, t.clientY); }, {passive:true});
+  pond.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') follow(e.clientX, e.clientY); });
+  pond.addEventListener('pointerdown', e => {
+    if (e.target.closest('a,button')) return;
+    const r = pond.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    ripples.push({x, y, r:2, max:120});
+    kois.forEach(k => { const dx = k.x - x, dy = k.y - y; if (Math.hypot(dx,dy) < 220){ k.a = Math.atan2(dy, dx); k.flee = 1; } });
+    if (reduce) frame();
+  });
+  new IntersectionObserver(es => { const vis = es[0].isIntersecting; if (vis && !running){ running = true; if (!reduce) requestAnimationFrame(frame); } running = vis; }).observe(pond);
+  // aparece con una gota inicial
+  ripples.push({x: W*0.72, y: H*0.32, r:2, max:150});
+  if (reduce){ for (let i=0;i<60;i++) kois.forEach(step); }
+  frame();
+})();
+
+/* destacados */
+(function(){
+  $('#feat').innerHTML = FEATURED.filter(f => ITEMS[f[0]]).map(([id,img,tag],k) => { const i = ITEMS[id], w = i.n.split(' ');
+    return `<button class="fcard press" type="button" data-item="${id}" style="background-image:url('${IMG}${img}.jpg')" aria-label="${esc(i.n)}, ${fmt(i.p)}">
+      <span class="tag ${k?'':'blue'}">${esc(tag)}${k?'':`<small>· ${daysLeft()}</small>`}</span>
+      <span class="bd"><span><h3>${esc(w[0])} <span>${esc(w.slice(1).join(' '))}</span></h3><span class="p">${fmt(i.p)}</span></span><span class="plus" aria-hidden="true">+</span></span>
+    </button>`; }).join('');
+})();
+
+/* carta */
+function qtyOf(id){ return cart.filter(l => l.id === id).reduce((a,l) => a + l.q, 0); }
+function renderMenu(){
+  $('#tabs').innerHTML = MENU.map((c,i) => `<button class="tab" type="button" data-go="${c.id}" ${i===0?'aria-current="true"':''}>${c.name.join('').toLowerCase().replace(/^./,x=>x.toUpperCase())}</button>`).join('');
+  $('#menu').innerHTML = MENU.map(c => {
+    const head = `<h2>${esc(c.name[0])}<span>${esc(c.name[1])}</span></h2>${c.note?`<p class="note">${esc(c.note)}</p>`:'<div style="height:12px"></div>'}`;
+    if (c.promo) return `<section class="sec" id="${c.id}">${head}<div class="promos">${c.items.map(i => `
+      <button class="promo press" type="button" data-item="${i.id}" aria-label="${esc(i.n)}, ${fmt(i.p)}">
+        <div class="ph" style="${photoStyle(i)}">${pics(i).length?'':koi()}</div>
+        <div class="bd"><div class="big">${i.big}<span>piezas</span></div><div class="d">${esc(i.d)}</div>
+        <div class="row"><span class="pr">${fmt(i.p)}</span><span class="plus" aria-hidden="true">+</span></div></div>
+      </button>`).join('')}</div></section>`;
+    return `<section class="sec" id="${c.id}">${head}<div class="list">${c.items.map(i => itemRow(i, c.compact)).join('')}</div></section>`;
+  }).join('');
+}
+function itemRow(i, compact){
+  const q = qtyOf(i.id);
+  return `<button class="item press ${compact?'compact':''}" type="button" data-item="${i.id}">
+    <div class="tx"><h3>${esc(i.n)}</h3>${i.d?`<p class="d">${esc(i.d)}</p>`:''}<div class="pr">${fmt(i.p)}${i.o?'<small>a elección</small>':''}</div></div>
+    <div class="thumb">${pics(i).length?`<img src="${IMG}${pics(i)[0]}.jpg" alt="" loading="lazy">`:koi()}${pics(i).length>1?`<span class="nph">${pics(i).length} fotos</span>`:''}${q?`<span class="qbadge">${q}</span>`:''}<span class="add" aria-hidden="true">+</span></div>
+  </button>`;
+}
+renderMenu();
+
+/* tabs: scroll y resaltado */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-go]');
+  if (t) { document.getElementById(t.dataset.go).scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto':'smooth'}); }
+  const it = e.target.closest('[data-item]');
+  if (it) openItem(it.dataset.item);
+});
+const io = new IntersectionObserver(es => {
+  es.forEach(en => { if (en.isIntersecting) {
+    document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-current', b.dataset.go === en.target.id));
+    const a = document.querySelector(`.tab[data-go="${en.target.id}"]`); a && a.scrollIntoView({inline:'center', block:'nearest'});
+  }});
+}, {rootMargin:'-45% 0px -50% 0px'});
+document.querySelectorAll('.sec').forEach(s => io.observe(s));
+
+/* hojas */
+let openSheet = null, lastFocus = null;
+function show(sheet){
+  lastFocus = document.activeElement; sheet.hidden = false;
+  requestAnimationFrame(() => { sheet.classList.add('on'); $('#scrim').classList.add('on'); });
+  document.body.style.overflow = 'hidden'; openSheet = sheet;
+  setTimeout(() => sheet.querySelector('.close').focus({preventScroll:true}), 60);
+}
+function hide(){
+  if (!openSheet) return; const s = openSheet; openSheet = null;
+  s.classList.remove('on'); $('#scrim').classList.remove('on'); document.body.style.overflow = '';
+  setTimeout(() => { s.hidden = true; }, 380); lastFocus && lastFocus.focus({preventScroll:true});
+}
+$('#scrim').onclick = hide;
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = hide);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+// arrastrar hacia abajo para cerrar
+document.querySelectorAll('.sheet').forEach(sh => {
+  let y0 = null, t0 = 0, dy = 0;
+  sh.querySelector('.grab').parentElement.addEventListener('touchstart', e => {
+    const sc = sh.querySelector('.sh-scroll'); if (sc.scrollTop > 0 && !e.target.closest('.grab')) return;
+    y0 = e.touches[0].clientY; t0 = Date.now(); dy = 0; sh.style.transition = 'none';
+  }, {passive:true});
+  sh.addEventListener('touchmove', e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); sh.style.transform = `translateY(${dy}px)`; }, {passive:true});
+  sh.addEventListener('touchend', () => {
+    if (y0 === null) return; sh.style.transition = ''; const v = dy / (Date.now() - t0);
+    if (dy > 120 || v > 0.6) { sh.style.transform = ''; hide(); } else sh.style.transform = '';
+    y0 = null;
+  });
+});
+
+/* detalle de producto */
+let cur = null;
+function openItem(id){
+  const i = ITEMS[id]; cur = {id, q:1, sel:{}, note:''};
+  const ps = pics(i), ph = $('#pdPhoto');
+  ph.innerHTML = ps.length ? `<div class="gal" id="gal">${ps.map((p,n) => `<img src="${IMG}${p}.jpg" alt="${esc(i.n)}${ps.length>1?`, foto ${n+1} de ${ps.length}`:''}">`).join('')}</div>${ps.length>1?`<div class="dots">${ps.map((p,n)=>`<span${n?'':' class="on"'}></span>`).join('')}</div>`:''}` : koi();
+  const g = $('#gal'); if (g && ps.length > 1) g.onscroll = () => { const k = Math.round(g.scrollLeft / g.clientWidth); ph.querySelectorAll('.dots span').forEach((d,n) => d.classList.toggle('on', n === k)); };
+  $('#pdName').textContent = i.n; $('#pdDesc').textContent = i.d || (MENU.find(c=>c.id===i.cat).note || '');
+  const opts = OPTS[i.o] || [];
+  $('#pdOpts').innerHTML = opts.map((g,gi) => `<div class="grp" data-g="${gi}"><h4>${esc(g.k)}<small>${g.n?`Elige ${g.n}`:'Elige 1'}</small></h4>
+    <div class="chips">${g.c.map(c => `<button type="button" class="chip press" aria-pressed="false" data-g="${gi}" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div></div>`).join('');
+  $('#pdNote').value = ''; $('#pdQty').textContent = 1; updPd(); show($('#pd'));
+}
+$('#pdOpts').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  const i = ITEMS[cur.id], g = +b.dataset.g, grp = OPTS[i.o][g], c = b.dataset.c, n = grp.n || 1;
+  let s = cur.sel[g] || [];
+  if (s.includes(c)) s = s.filter(x => x !== c);
+  else { if (n === 1) s = [c]; else { s = [...s, c]; if (s.length > n) s.shift(); } }
+  cur.sel[g] = s;
+  b.closest('.grp').classList.remove('err');
+  b.closest('.chips').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', s.includes(x.dataset.c)));
+});
+function updPd(){ $('#pdQty').textContent = cur.q; $('#pdTotal').textContent = fmt(ITEMS[cur.id].p * cur.q); }
+$('#pdMinus').onclick = () => { cur.q = Math.max(1, cur.q - 1); updPd(); };
+$('#pdPlus').onclick = () => { cur.q = Math.min(30, cur.q + 1); updPd(); };
+$('#pdAdd').onclick = () => {
+  const i = ITEMS[cur.id], opts = OPTS[i.o] || []; let ok = true;
+  opts.forEach((g,gi) => { const need = g.n || 1; if ((cur.sel[gi]||[]).length !== need) { ok = false; const el = document.querySelector(`.grp[data-g="${gi}"]`); el.classList.remove('err'); void el.offsetWidth; el.classList.add('err'); } });
+  if (!ok) { toast('Elige las opciones marcadas'); const f = document.querySelector('.grp.err'); f && f.scrollIntoView({block:'center', behavior:'smooth'}); return; }
+  const optTxt = opts.map((g,gi) => cur.sel[gi].join(' + ')).join(', ');
+  const note = $('#pdNote').value.trim();
+  const ex = cart.find(l => l.id === cur.id && l.opt === optTxt && l.note === note);
+  if (ex) ex.q += cur.q; else cart.push({id:cur.id, q:cur.q, opt:optTxt, note});
+  const src = $('#pdPhoto').getBoundingClientRect();
+  save(); hide(); flyToBar(i, src, () => refresh(true)); toast(`${cur.q} × ${i.n} agregado`);
+};
+
+/* barra + carrito */
+const total = () => cart.reduce((a,l) => a + ITEMS[l.id].p * l.q, 0);
+const count = () => cart.reduce((a,l) => a + l.q, 0);
+function refresh(bump){
+  const bar = $('#bar'); $('#barCnt').textContent = count(); $('#barTot').textContent = fmt(total());
+  bar.classList.toggle('show', count() > 0);
+  renderStack(bump);
+  if (bump) { bar.classList.remove('catch'); void bar.offsetWidth; bar.classList.add('catch'); }
+  document.querySelectorAll('.item[data-item]').forEach(el => {
+    const q = qtyOf(el.dataset.item), th = el.querySelector('.thumb'); let b = th.querySelector('.qbadge');
+    if (q) { if (!b) { b = document.createElement('span'); b.className = 'qbadge'; th.prepend(b); } b.textContent = q; } else if (b) b.remove();
+  });
+}
+$('#bar').onclick = () => { renderCart(); show($('#cart')); };
+
+function renderCart(){
+  if (!cart.length) {
+    $('#cartBody').innerHTML = `<h3 class="c-h" id="cartH">Tu pedido</h3><div class="empty">${koi()}<p>Todavía no agregas nada.<br>Elige algo de la carta para empezar.</p></div>`;
+    $('#cartFoot').innerHTML = `<button class="btn btn-blue press" type="button" data-close style="width:100%;justify-content:center">Ver la carta</button>`;
+    $('#cartFoot [data-close]').onclick = hide; return;
+  }
+  $('#cartBody').innerHTML = `<h3 class="c-h" id="cartH">Tu pedido</h3>
+    ${boardHTML()}
+    ${cart.map((l,k) => { const i = ITEMS[l.id]; return `<div class="c-item">${pics(i).length?`<img class="c-thumb" src="${IMG}${pics(i)[0]}.jpg" alt="">`:`<span class="c-thumb">${koi()}</span>`}<div class="tx"><b>${esc(i.n)}</b>${l.opt?`<small>${esc(l.opt)}</small>`:''}${l.note?`<small>“${esc(l.note)}”</small>`:''}<div class="p">${fmt(i.p*l.q)}</div></div>
+      <div class="step"><button type="button" class="press" data-dec="${k}" aria-label="Quitar uno">${l.q===1?'🗑':'−'}</button><output>${l.q}</output><button type="button" class="press" data-inc="${k}" aria-label="Agregar uno">+</button></div></div>`; }).join('')}
+    <div class="grp"><h4>¿Cómo lo quieres?</h4>
+      <div class="seg"><button type="button" data-mode="delivery" aria-pressed="${form.mode==='delivery'}">Delivery</button><button type="button" data-mode="retiro" aria-pressed="${form.mode==='retiro'}">Retiro</button></div></div>
+    <div class="fld" id="fName"><label for="fn">Tu nombre</label><input id="fn" autocomplete="name" value="${esc(form.name)}" placeholder="Ej: Camila"><span class="msg">Escribe tu nombre para saber de quién es el pedido.</span></div>
+    ${form.mode==='delivery'?`<div class="fld" id="fAddr"><label for="fa">Dirección de entrega</label><input id="fa" autocomplete="street-address" value="${esc(form.addr)}" placeholder="Calle, número y referencia"><span class="msg">Escribe la dirección para el delivery.</span></div>`:''}
+    <div class="grp"><h4>Pago</h4><div class="seg"><button type="button" data-pay="Transferencia" aria-pressed="${form.pay==='Transferencia'}">Transferencia</button><button type="button" data-pay="Efectivo" aria-pressed="${form.pay==='Efectivo'}">Efectivo</button></div></div>
+    <div class="fld"><label for="fo">Comentario (opcional)</label><textarea id="fo" rows="2" placeholder="Ej: tocar el timbre, sin palillos">${esc(form.note)}</textarea></div>
+    <div class="sum"><span>Total</span><b>${fmt(total())}</b></div>
+    <p class="small">${form.mode==='delivery'?'El valor del delivery se confirma por WhatsApp según tu sector.':'Te avisamos por WhatsApp cuando esté listo para retirar.'}</p>`;
+  $('#cartFoot').innerHTML = `<a class="btn btn-wa press" id="send" target="_blank" rel="noopener" href="#"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.7.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>Enviar pedido por WhatsApp</a>`;
+  $('#send').href = waUrl(); $('#send').onclick = send;
+}
+$('#cartBody').addEventListener('click', e => {
+  const inc = e.target.closest('[data-inc]'), dec = e.target.closest('[data-dec]'), md = e.target.closest('[data-mode]'), py = e.target.closest('[data-pay]');
+  if (inc) cart[+inc.dataset.inc].q++;
+  else if (dec) { const k = +dec.dataset.dec; if (--cart[k].q <= 0) cart.splice(k,1); }
+  else if (md) form.mode = md.dataset.mode;
+  else if (py) form.pay = py.dataset.pay;
+  else return;
+  keepForm(); save(); refresh(); const st = $('#cartBody').scrollTop; renderCart(); $('#cartBody').scrollTop = st;
+});
+$('#cartBody').addEventListener('input', keepForm);
+function keepForm(){ const n=$('#fn'), a=$('#fa'), o=$('#fo'); if(n) form.name=n.value; if(a) form.addr=a.value; if(o) form.note=o.value; const sb=$('#send'); if(sb) sb.href = waUrl(); }
+
+function send(e){
+  keepForm(); let ok = true;
+  [['#fName', form.name], ...(form.mode==='delivery' ? [['#fAddr', form.addr]] : [])].forEach(([s,v]) => { const el = $(s); const bad = !v.trim(); el.classList.toggle('err', bad); if (bad) ok = false; });
+  if (!ok) { e.preventDefault(); const f = document.querySelector('.fld.err input'); f && f.focus(); return; }
+  toast('Abriendo WhatsApp…'); party();
+}
+function waUrl(){
+  const lines = cart.map(l => { const i = ITEMS[l.id]; return `• ${l.q} × ${i.n}${l.opt?` (${l.opt})`:''}${l.note?` — ${l.note}`:''}: ${fmt(i.p*l.q)}`; });
+  const msg = [
+    '¡Hola Bestsushi! 🍣 Quiero hacer este pedido:', '', ...lines, '',
+    `*Total: ${fmt(total())}*${form.mode==='delivery'?' + delivery':''}`, '',
+    `Nombre: ${form.name.trim()}`,
+    form.mode==='delivery' ? `Delivery a: ${form.addr.trim()}` : 'Retiro en el local',
+    `Pago: ${form.pay}`,
+    ...(form.note.trim() ? [`Comentario: ${form.note.trim()}`] : []),
+  ].join('\n');
+  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+}
+
+/* bandeja: miniaturas de lo que llevas + vuelo al agregar */
+let lastStackKey = '';
+function renderStack(isNew){
+  const st = $('#stack'); if (!st) return;
+  const lines = [...cart].reverse(), show = lines.slice(0, cart.length > 3 ? 2 : 3), extra = cart.length - show.length;
+  const key = show.map(l => l.id).join(',');
+  st.innerHTML = show.map((l,k) => { const i = ITEMS[l.id], p = pics(i);
+    const cls = (isNew && k === 0) ? 'new' : '';
+    return p.length ? `<img class="${cls}" src="${IMG}${p[0]}.jpg" alt="">` : `<span class="${cls}">${koi()}</span>`; }).join('')
+    + (extra > 0 ? `<span class="more">+${extra}</span>` : '');
+  lastStackKey = key;
+}
+function flyToBar(i, from, done){
+  const bar = $('#bar'), wasHidden = !bar.classList.contains('show');
+  if (wasHidden) bar.classList.add('show');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !from || !from.width) { done(); return; }
+  const st = $('#stack');
+  const tx = bar.offsetLeft + st.offsetLeft + 19, ty = bar.offsetTop + st.offsetTop + 19;
+  const fx = from.left + from.width/2, fy = from.top + Math.min(from.height/2, innerHeight*0.45);
+  const f = document.createElement('div'); f.className = 'flyer';
+  const p = pics(i); if (p.length) f.style.backgroundImage = `url('${IMG}${p[0]}.jpg')`; else f.innerHTML = koi();
+  document.body.appendChild(f);
+  const mx = (fx + tx)/2 + (tx > fx ? -40 : 40), my = Math.min(fy, ty) - 90;
+  const T = (x,y,s) => `translate(${x}px,${y}px) scale(${s})`;
+  const a = f.animate([
+    {transform: T(fx,fy,1.6), opacity: .0, offset: 0},
+    {transform: T(fx,fy,1.35), opacity: 1, offset: .12},
+    {transform: T(mx,my,.95), offset: .55},
+    {transform: T(tx,ty,.58), opacity: 1, offset: 1}
+  ], {duration: 720, easing: 'cubic-bezier(.45,0,.2,1)'});
+  a.onfinish = () => { f.remove(); done(); };
+}
+// agregar rápido con el + en productos sin opciones
+document.addEventListener('click', e => {
+  const plus = e.target.closest('.item .add, .fcard .plus, .promo .plus');
+  if (!plus) return;
+  const card = plus.closest('[data-item]'), i = ITEMS[card.dataset.item];
+  if (OPTS[i.o]) return;               // tiene opciones: que abra el detalle
+  e.stopPropagation(); e.preventDefault();
+  const ex = cart.find(l => l.id === i.id && !l.opt && !l.note);
+  if (ex) ex.q++; else cart.push({id:i.id, q:1, opt:'', note:''});
+  save(); flyToBar(i, (card.querySelector('.thumb') || card).getBoundingClientRect(), () => refresh(true));
+  toast(`${i.n} agregado`);
+}, true);
+
+/* tabla: el pedido armado pieza por pieza, como una tabla de sushi */
+function piecesOf(i){
+  const m = i.n.match(/^(\d+)\s/); if (i.cat === 'promos') return +(i.big || 10);
+  if (m) return +m[1];
+  if (['handrolls','gohan','bebidas','burger'].includes(i.cat)) return 1;
+  return 10;
+}
+function boardHTML(){
+  let total = 0, k = 0;
+  const rows = cart.map(l => {
+    const i = ITEMS[l.id], p = pics(i), n = piecesOf(i) * l.q; total += n;
+    const shown = Math.min(n, 14), kind = i.cat === 'bebidas' ? 'can' : (['gohan','burger'].includes(i.cat) ? 'bowl' : '');
+    let html = '';
+    for (let j = 0; j < shown; j++) {
+      const bx = 50 + ((j*37)%17 - 8), by = 52 + ((j*53)%15 - 7);
+      const st = p.length && kind !== 'can' ? `background-image:url('${IMG}${p[j % p.length]}.jpg');background-position:${bx}% ${by}%;` : '';
+      html += `<span class="pc ${kind}" style="${st}animation-delay:${Math.min(k++,40)*22}ms">${!p.length && kind !== 'can' ? koi() : ''}</span>`;
+    }
+    const label = kind === 'can' ? `${l.q} lata${l.q>1?'s':''}` : (kind === 'bowl' || i.cat === 'handrolls' ? `${l.q} × ${i.n.split(' ')[0]}` : `${n} piezas`);
+    return `<div class="brow">${html}<small>${n > shown ? '+'+(n-shown)+' · ' : ''}${esc(label)}</small></div>`;
+  }).join('');
+  return `<div class="board" aria-label="Tu tabla"><div class="board-h"><span>Tu tabla</span><b>${total} ${total===1?'pieza':'piezas'}</b></div>${rows}</div>`;
+}
+
+/* cuenta regresiva del Roll del mes */
+function daysLeft(){ const n = new Date(), end = new Date(n.getFullYear(), n.getMonth()+1, 0); const d = end.getDate() - n.getDate();
+  return d === 0 ? 'último día' : `quedan ${d} día${d>1?'s':''}`; }
+
+/* ---------- ARMA TU ROLL ---------- */
+const WRAPS_ALL = [['Frito en panko','c1','#E9A23B'],['Envuelto en queso','c2','#F6E7B8'],['Envuelto en sésamo','c3','#E7D8B4'],['Envuelto en nori','c4','#17241B'],['Envuelto en palta','c5','#A9C95A'],['Envuelto en ciboulette','c6','#5F9E3A'],['Envuelto en salmón','c7','#F28C5B']];
+const WRAPS = WRAPS_ALL.filter(w => ITEMS[w[1]]);
+const PROT = {'Pollo':'#F3D3A6','Camarón':'#F7A27E','Kanikama':'#F06A5D'};
+const VEG = {'Palta':'#8DBF4E','Palmito':'#F2EED8','Choclillo':'#F4CF4A','Ciboulette':'#4F8E2E'};
+const bSel = {w:null, p:null, v:null};
+function bChips(el, list, key){
+  el.innerHTML = list.map(([label, extra]) => `<button type="button" class="chip press" aria-pressed="false" data-b="${key}" data-v="${esc(label)}">${esc(label)}${extra?`<small>${extra}</small>`:''}</button>`).join('');
+}
+bChips($('#bS1'), WRAPS.map(w => [w[0].replace('Envuelto en ','').replace('Frito en ','En ').replace(/^./,c=>c.toUpperCase()), fmt(ITEMS[w[1]].p)]), 'w');
+bChips($('#bS2'), Object.keys(PROT).map(x => [x]), 'p');
+bChips($('#bS3'), Object.keys(VEG).map(x => [x]), 'v');
+$('#arma').addEventListener('click', e => {
+  const b = e.target.closest('[data-b]'); if (!b) return;
+  const key = b.dataset.b; bSel[key] = b.dataset.v;
+  b.parentElement.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === b));
+  paintRoll();
+});
+function paintRoll(){
+  const wi = bSel.w ? $('#bS1').querySelectorAll('.chip')[[...$('#bS1').querySelectorAll('.chip')].findIndex(c => c.dataset.v === bSel.w)] : null;
+  const w = wi ? WRAPS[[...$('#bS1').querySelectorAll('.chip')].indexOf(wi)] : null;
+  if (w) $('#bWrap').setAttribute('fill', w[2]);
+  const dots = $('#bDots'); dots.innerHTML = '';
+  if (w && /sésamo/.test(w[0])) for (let k=0;k<26;k++){ const a = k/26*6.283, r = 51 + (k%2)*2; dots.innerHTML += `<ellipse cx="${60+Math.cos(a)*r}" cy="${60+Math.sin(a)*r}" rx="1.6" ry="1" fill="#5A4630" transform="rotate(${a*57} ${60+Math.cos(a)*r} ${60+Math.sin(a)*r})"/>`; }
+  if (w && /ciboulette/.test(w[0])) for (let k=0;k<34;k++){ const a = k/34*6.283; dots.innerHTML += `<circle cx="${60+Math.cos(a)*(50+(k%3))}" cy="${60+Math.sin(a)*(50+(k%3))}" r="1.3" fill="#2F6B1C"/>`; }
+  const P = $('#bProt'), V = $('#bVeg');
+  if (bSel.p){ P.setAttribute('fill', PROT[bSel.p]); P.classList.add('on'); }
+  if (bSel.v){ V.setAttribute('fill', VEG[bSel.v]); V.classList.add('on'); }
+  const done = w && bSel.p && bSel.v;
+  $('#bPrice').textContent = w ? fmt(ITEMS[w[1]].p) : 'desde $4.300';
+  $('#bDesc').textContent = [w ? w[0] : 'Envoltura', bSel.p || 'proteína', bSel.v || 'vegetal'].join(' · ');
+  $('#bTot').textContent = w ? fmt(ITEMS[w[1]].p) : '—';
+  $('#bAdd').disabled = !done; $('#bAdd').style.opacity = done ? 1 : .55;
+  bWrapItem = w ? w[1] : null;
+}
+let bWrapItem = null; paintRoll();
+$('#bAdd').onclick = () => {
+  if (!bWrapItem || !bSel.p || !bSel.v) { toast('Elige envoltura, proteína y vegetal'); return; }
+  const i = ITEMS[bWrapItem], opt = `${bSel.p}, ${bSel.v}`;
+  const ex = cart.find(l => l.id === i.id && l.opt === opt && !l.note); if (ex) ex.q++; else cart.push({id:i.id, q:1, opt, note:''});
+  save(); flyToBar(i, $('#arma svg').getBoundingClientRect(), () => refresh(true)); toast(`${i.n} (${opt}) agregado`);
+};
+
+/* ---------- RULETA ---------- */
+const SPIN_POOL = Object.values(ITEMS).filter(i => pics(i).length && i.cat !== 'bebidas');
+let spinPick = null, spinning = false, spinStop = false;
+function spin(){
+  if (spinning) return; spinning = true; spinStop = false; const slot = $('#slot'); slot.classList.add('spinning');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let n = 0, delay = 55, steps = reduce ? 1 : 14 + Math.floor(Math.random()*4);
+  const tick = () => {
+    spinPick = SPIN_POOL[Math.floor(Math.random()*SPIN_POOL.length)];
+    $('#slotImg').src = `${IMG}${pics(spinPick)[0]}.jpg`; $('#slotName').textContent = spinPick.n; $('#slotPrice').textContent = fmt(spinPick.p);
+    if (++n < steps && !spinStop){ delay *= 1.1; setTimeout(tick, delay); } else { slot.classList.remove('spinning'); spinning = false; }
+  };
+  tick();
+}
+$('#spinOpen').onclick = () => { show($('#spin')); setTimeout(spin, 250); };
+$('#spinGo').onclick = spin;
+$('#spinAdd').onclick = () => { if (spinning) spinStop = true; if (!spinPick) return; const id = spinPick.id; hide(); setTimeout(() => openItem(id), 420); };
+
+/* ---------- PEDIR LO MISMO ---------- */
+const LAST = 'bestsushi-ultimo-v1';
+function showAgain(){
+  let last = null; try { last = JSON.parse(localStorage.getItem(LAST) || 'null'); } catch(e) {}
+  const box = $('#again'); if (!last || !last.items || !last.items.length || cart.length) { box.hidden = true; return; }
+  const items = last.items.filter(l => ITEMS[l.id]); if (!items.length) { box.hidden = true; return; }
+  const sum = items.map(l => `${l.q} × ${ITEMS[l.id].n}`).join(', ');
+  box.innerHTML = `<div class="again-in"><div class="tx"><b>¿Lo mismo de la otra vez?</b><small>${esc(sum)}</small></div><button class="btn press" type="button" id="againGo">Repetir</button></div>`;
+  box.hidden = false;
+  $('#againGo').onclick = () => { cart = items.map(l => ({...l})); save(); refresh(true); box.hidden = true; renderCart(); show($('#cart')); };
+}
+showAgain();
+
+/* ---------- CELEBRACIÓN ---------- */
+function party(){
+  try { localStorage.setItem(LAST, JSON.stringify({items: cart, at: Date.now()})); } catch(e) {}
+  hide(); setTimeout(() => $('#party').classList.add('on'), 200);
+}
+$('#partyDone').onclick = () => { cart = []; save(); refresh(); $('#party').classList.remove('on'); scrollTo({top:0}); showAgain(); };
+$('#partyBack').onclick = () => $('#party').classList.remove('on');
+
+let tt; function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('on'), 1800); }
+refresh();
+</script>
+
+</body>
+</html>
