@@ -15,9 +15,6 @@ const HOURS = {days:[2,3,4,5,6,0], open:'17:00', close:'22:30'}; // martes(2) a 
 // Destacados de arriba: [id del producto, foto, etiqueta, título opcional 'negrita|delgada']. El primero es el Roll del mes.
 const FEATURED = [['sd1','destacado-sushidog','Roll del mes','Sushi|dog'],['e5','destacado-tropical-roll','Especial'],['sb1','destacado-sushi-burger','Sushi burger'],['e10','destacado-flamed-salmon','Flambeado']];
 const IMG = 'fotos/';   // carpeta de fotos (no cambiar)
-// Planilla de Google de Gaspar: precios, agotados, mostrar, Roll del mes y productos simples.
-// Lo que diga la planilla manda sobre este archivo. Vacío ('') = no usar planilla.
-const PLANILLA = '1hQ8DBp9EzdFamp5RmJJEXPQoy5go48E3_4M5XgL8Vqs';
 // "¿Le sumas algo?" en el carrito: [id del producto, opción (si tiene), nombre corto, estilo sin foto]
 const SUGERIDOS = [['a1','','10 gyozas'],['b1','Coca-Cola','Coca-Cola lata','can'],['b1','Sprite','Sprite lata','can sp'],['x1','Soya','Soya extra','sauce'],['x1','Teriyaki','Teriyaki extra','sauce ter'],['a8','','5 empanadas de queso'],['a3','','5 arrollados primavera']];
 

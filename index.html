@@ -491,23 +491,14 @@ footer a{color:var(--blue-ink);font-weight:700;text-decoration:none}
 
 <script src="menu.js"></script>
 <script>
-/* ======================= PLANILLA DE GOOGLE =======================
-   Gaspar maneja precios, agotados, qué se muestra, Roll del mes y productos simples
-   desde una planilla de Google (PLANILLA en menu.js). La carta la lee al abrir.
-   Si la planilla no responde, se usa la última copia guardada o lo que dice menu.js. */
+/* ======================= PANEL DE GASPAR =======================
+   Gaspar maneja precios, agotados, qué se muestra, Roll del mes, productos nuevos y "Hoy"
+   desde bestsushi.cl/admin/. Eso se guarda en Vercel y la carta lo lee al abrir (/api/carta).
+   Si no responde, se usa la última copia guardada en el teléfono o lo que dice menu.js. */
 const norm = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 const isYes = v => /^(si|x|true|verdadero|1|ok|✓|✔)/.test(norm(v));
 const isNo = v => /^(no|false|falso|0)$/.test(norm(v));
 const toNum = v => typeof v === 'number' ? Math.round(v) : (parseInt(String(v ?? '').replace(/[^0-9]/g,''), 10) || 0);
-function sheetRows(r){
-  if (!r || r.status === 'error' || !r.table) throw new Error('planilla sin datos');
-  let head = r.table.cols.map(c => norm(c.label));
-  let rows = r.table.rows.map(row => (row.c || []).map(c => c ? (c.v ?? c.f ?? '') : ''));
-  if (!head.some(Boolean) && rows.length) head = rows.shift().map(norm);   // por si Google no detecta encabezados
-  const col = k => head.findIndex(h => h.startsWith(k));
-  const C = {cat:col('categ'), n:col('producto'), d:col('descrip'), p:col('precio'), ag:col('agotado'), ver:col('mostrar'), rdm:col('roll'), id:col('codigo')};
-  return rows.map(r => Object.fromEntries(Object.entries(C).map(([k,i]) => [k, i >= 0 ? r[i] : ''])));
-}
 const SETTINGS = {estado:'', aviso:''};
 function applySettings(r){   // filas con Categoría "Ajustes"
   const key = norm(r.n), val = String(r.d ?? '').trim();
@@ -515,6 +506,14 @@ function applySettings(r){   // filas con Categoría "Ajustes"
   else if (key.startsWith('horario')) { const t = val.match(/(\d{1,2})(?:[:.h](\d{2}))?\D+(\d{1,2})(?:[:.h](\d{2}))?/);
     if (t) { const f = (h,mm) => String(+h).padStart(2,'0') + ':' + (mm || '00'); HOURS.open = f(t[1],t[2]); HOURS.close = f(t[3],t[4]); } }
   else if (key.startsWith('aviso')) SETTINGS.aviso = val;
+}
+/* foto subida desde el panel (reemplaza las del repo) y opciones escritas como "Proteína: Pollo, Camarón; Salsa: Soya, Teriyaki" */
+function extra(it, r){
+  const f = String(r.foto ?? '').trim(); const urls = f.split(/\s+/).filter(u => /^https:\/\/[^\s'"()<>\\]+$/.test(u)); if (urls.length) { it.imgs = urls; delete it.img; }
+  const o = String(r.opc ?? '').trim();
+  if (o){ const groups = o.split(/[;\n]+/).map(g => { const [k, ...rest] = g.split(':'); const c = (rest.length ? rest.join(':') : k).split(',').map(x => x.trim()).filter(Boolean);
+      return c.length ? {k: rest.length ? k.trim() : 'Elige', c} : null; }).filter(Boolean);
+    if (groups.length){ OPTS['planilla_' + it.id] = groups; it.o = 'planilla_' + it.id; } }
 }
 function applySheet(rows){
   const map = {}; MENU.forEach(c => c.items.forEach(i => map[i.id] = i));
@@ -525,13 +524,14 @@ function applySheet(rows){
     if (id && map[id]){ const it = map[id];
       if (name) it.n = name; if (desc && !it.rolls) it.d = desc; if (price > 0) it.p = price;
       it.agotado = isYes(r.ag); if (String(r.ver ?? '').trim()) it.oculto = isNo(r.ver);
+      extra(it, r);
       if (!rdm && isYes(r.rdm)) rdm = id;
-    } else if (!id && name && price > 0){   // producto nuevo escrito por Gaspar
+    } else if (name && price > 0){   // producto nuevo (desde la planilla o el panel)
       const cn = norm(r.cat) || 'otros';
       let cat = MENU.find(c => norm(c.name.join('')) === cn);
       if (!cat){ cat = {id:'cat-' + cn.replace(/[^a-z0-9]+/g,'-'), name:[String(r.cat || 'Otros').trim(), ''], note:'', items:[]};
         const b = MENU.findIndex(c => c.id === 'bebidas'); MENU.splice(b < 0 ? MENU.length : b, 0, cat); }
-      const it = {id:'n' + (++k), n:name, p:price, agotado:isYes(r.ag), oculto:isNo(r.ver)}; if (desc) it.d = desc;
+      const it = {id:id || ('n' + (++k)), n:name, p:price, agotado:isYes(r.ag), oculto:isNo(r.ver)}; if (desc) it.d = desc; extra(it, r);
       cat.items.push(it); if (!rdm && isYes(r.rdm)) rdm = it.id; map[it.id] = it;
     }
   });
@@ -557,8 +557,9 @@ let form = {mode:'delivery', name:'', addr:'', pay:'Transferencia', note:''};
 
 const koi = cls => `<span class="koi ${cls||''}" aria-hidden="true"></span>`;
 const pics = i => i.imgs || (i.img ? [i.img] : []);
+const pic = p => /^https?:/.test(p) ? p : IMG + p + '.jpg';   // fotos del repo o subidas desde el panel
 const lp = l => l.px || ITEMS[l.id].p;   // precio unitario de la línea (con agregados)
-const photoStyle = i => pics(i).length ? `background-image:url('${IMG}${pics(i)[0]}.jpg')` : '';
+const photoStyle = i => pics(i).length ? `background-image:url('${pic(pics(i)[0])}')` : '';
 
 /* estado abierto/cerrado */
 (function(){
@@ -654,7 +655,7 @@ const photoStyle = i => pics(i).length ? `background-image:url('${IMG}${pics(i)[
 /* destacados */
 (function(){
   $('#feat').innerHTML = FEATURED.filter(f => ITEMS[f[0]]).map(([id,img,tag,title],k) => { const i = ITEMS[id], w = title ? title.split('|') : i.n.split(' ');
-    return `<button class="fcard press ${i.agotado?'off':''}" type="button" data-item="${id}" aria-label="${esc(i.n)}, ${fmt(i.p)}"><span class="bgz" style="background-image:url('${IMG}${img}.jpg')"></span>${k?'':'<span class="shine"></span>'}${i.agotado?'<span class="soldout">Agotado hoy</span>':''}
+    return `<button class="fcard press ${i.agotado?'off':''}" type="button" data-item="${id}" aria-label="${esc(i.n)}, ${fmt(i.p)}"><span class="bgz" style="background-image:url('${pic(img)}')"></span>${k?'':'<span class="shine"></span>'}${i.agotado?'<span class="soldout">Agotado hoy</span>':''}
       <span class="tag ${k?'':'blue'}">${esc(tag)}${k?'':`<small>· ${daysLeft()}</small>`}</span>
       <span class="bd"><span><h3>${esc(w[0])} <span>${esc(w.slice(1).join(' '))}</span></h3><span class="p">${fmt(i.p)}</span></span><span class="plus" aria-hidden="true">+</span></span>
     </button>`; }).join('');
@@ -683,7 +684,7 @@ function itemRow(i, compact){
   const q = qtyOf(i.id);
   return `<button class="item press ${compact?'compact':''} ${i.agotado?'off':''}" type="button" data-item="${i.id}">
     <div class="tx"><h3>${esc(i.n)}${i.agotado?'<span class="soldout">Agotado hoy</span>':''}</h3>${i.d?`<p class="d">${esc(i.d)}</p>`:''}<div class="pr">${fmt(i.p)}${i.o?`<small>${onlyExtras(i)?'+ agregados':'a elección'}</small>`:''}</div></div>
-    <div class="thumb">${pics(i).length?`<img src="${IMG}${pics(i)[0]}.jpg" alt="" loading="lazy">`:koi()}${pics(i).length>1?`<span class="nph">${pics(i).length} fotos</span>`:''}${q?`<span class="qbadge">${q}</span>`:''}<span class="add" aria-hidden="true">+</span></div>
+    <div class="thumb">${pics(i).length?`<img src="${pic(pics(i)[0])}" alt="" loading="lazy">`:koi()}${pics(i).length>1?`<span class="nph">${pics(i).length} fotos</span>`:''}${q?`<span class="qbadge">${q}</span>`:''}<span class="add" aria-hidden="true">+</span></div>
   </button>`;
 }
 renderMenu();
@@ -748,7 +749,7 @@ let cur = null;
 function openItem(id){
   const i = ITEMS[id]; cur = {id, q:1, sel:{}, note:''};
   const ps = pics(i), ph = $('#pdPhoto');
-  ph.innerHTML = ps.length ? `<div class="gal" id="gal">${ps.map((p,n) => `<img src="${IMG}${p}.jpg" alt="${esc(i.n)}${ps.length>1?`, foto ${n+1} de ${ps.length}`:''}">`).join('')}</div>${ps.length>1?`<div class="dots">${ps.map((p,n)=>`<span${n?'':' class="on"'}></span>`).join('')}</div>`:''}` : koi();
+  ph.innerHTML = ps.length ? `<div class="gal" id="gal">${ps.map((p,n) => `<img src="${pic(p)}" alt="${esc(i.n)}${ps.length>1?`, foto ${n+1} de ${ps.length}`:''}">`).join('')}</div>${ps.length>1?`<div class="dots">${ps.map((p,n)=>`<span${n?'':' class="on"'}></span>`).join('')}</div>`:''}` : koi();
   const g = $('#gal'); if (g && ps.length > 1) g.onscroll = () => { const k = Math.round(g.scrollLeft / g.clientWidth); ph.querySelectorAll('.dots span').forEach((d,n) => d.classList.toggle('on', n === k)); };
   $('#pdName').textContent = i.n;
   if (i.rolls) $('#pdDesc').innerHTML = `<ul class="pd-list">${i.rolls.map(r => `<li><b>${esc(r[0])}</b><span>${esc(r[1])}${r[2]?`<em>${esc(r[2])}</em>`:''}</span></li>`).join('')}</ul>`;
@@ -834,7 +835,7 @@ function renderCart(){
   }
   $('#cartBody').innerHTML = `<h3 class="c-h" id="cartH">Tu pedido</h3>
     ${boardHTML()}
-    ${cart.map((l,k) => { const i = ITEMS[l.id]; return `<div class="c-item">${pics(i).length?`<img class="c-thumb" src="${IMG}${pics(i)[0]}.jpg" alt="">`:`<span class="c-thumb">${koi()}</span>`}<div class="tx"><b>${esc(i.n)}</b>${l.opt?`<small>${esc(l.opt)}</small>`:''}${l.note?`<small>“${esc(l.note)}”</small>`:''}<div class="p">${fmt(lp(l)*l.q)}</div></div>
+    ${cart.map((l,k) => { const i = ITEMS[l.id]; return `<div class="c-item">${pics(i).length?`<img class="c-thumb" src="${pic(pics(i)[0])}" alt="">`:`<span class="c-thumb">${koi()}</span>`}<div class="tx"><b>${esc(i.n)}</b>${l.opt?`<small>${esc(l.opt)}</small>`:''}${l.note?`<small>“${esc(l.note)}”</small>`:''}<div class="p">${fmt(lp(l)*l.q)}</div></div>
       <div class="step"><button type="button" class="press" data-dec="${k}" aria-label="Quitar uno">${l.q===1?'🗑':'−'}</button><output>${l.q}</output><button type="button" class="press" data-inc="${k}" aria-label="Agregar uno">+</button></div></div>`; }).join('')}
     ${upsHTML()}
     <div class="grp"><h4>¿Cómo lo quieres?</h4>
@@ -854,7 +855,7 @@ function upsHTML(){
   const list = SUGERIDOS.filter(([id,opt]) => ITEMS[id] && !ITEMS[id].agotado && !cart.some(l => l.id === id && (l.opt||'') === (opt||'')));
   if (!list.length) return '';
   return `<div class="ups"><h4>¿Le sumas algo?<small>un toque y listo</small></h4><div class="ups-row">${list.map(([id,opt,label,look]) => { const i = ITEMS[id], p = pics(i);
-    const ph = p.length ? `<div class="ph" style="background-image:url('${IMG}${p[0]}.jpg')"></div>` : `<div class="ph ${look||''}">${look ? '' : koi()}</div>`;
+    const ph = p.length ? `<div class="ph" style="background-image:url('${pic(p[0])}')"></div>` : `<div class="ph ${look||''}">${look ? '' : koi()}</div>`;
     return `<button type="button" class="up press" data-up="${id}" data-opt="${esc(opt||'')}">${ph}<b>${esc(label || i.n)}</b><span>+ ${fmt(i.p)}</span><i aria-hidden="true">+</i></button>`; }).join('')}</div></div>`;
 }
 $('#cartBody').addEventListener('click', e => {
@@ -906,7 +907,7 @@ function renderStack(isNew){
   const key = show.map(l => l.id).join(',');
   st.innerHTML = show.map((l,k) => { const i = ITEMS[l.id], p = pics(i);
     const cls = (isNew && k === 0) ? 'new' : '';
-    return p.length ? `<img class="${cls}" src="${IMG}${p[0]}.jpg" alt="">` : `<span class="${cls}">${koi()}</span>`; }).join('')
+    return p.length ? `<img class="${cls}" src="${pic(p[0])}" alt="">` : `<span class="${cls}">${koi()}</span>`; }).join('')
     + (extra > 0 ? `<span class="more">+${extra}</span>` : '');
   lastStackKey = key;
 }
@@ -918,7 +919,7 @@ function flyToBar(i, from, done){
   const tx = bar.offsetLeft + st.offsetLeft + 19, ty = bar.offsetTop + st.offsetTop + 19;
   const fx = from.left + from.width/2, fy = from.top + Math.min(from.height/2, innerHeight*0.45);
   const f = document.createElement('div'); f.className = 'flyer';
-  const p = pics(i); if (p.length) f.style.backgroundImage = `url('${IMG}${p[0]}.jpg')`; else f.innerHTML = koi();
+  const p = pics(i); if (p.length) f.style.backgroundImage = `url('${pic(p[0])}')`; else f.innerHTML = koi();
   document.body.appendChild(f);
   const mx = (fx + tx)/2 + (tx > fx ? -40 : 40), my = Math.min(fy, ty) - 90;
   const T = (x,y,s) => `translate(${x}px,${y}px) scale(${s})`;
@@ -959,7 +960,7 @@ function boardHTML(){
     let html = '';
     for (let j = 0; j < shown; j++) {
       const bx = 50 + ((j*37)%17 - 8), by = 52 + ((j*53)%15 - 7);
-      const st = p.length && kind !== 'can' ? `background-image:url('${IMG}${p[j % p.length]}.jpg');background-position:${bx}% ${by}%;` : '';
+      const st = p.length && kind !== 'can' ? `background-image:url('${pic(p[j % p.length])}');background-position:${bx}% ${by}%;` : '';
       html += `<span class="pc ${kind}" style="${st}animation-delay:${Math.min(k++,40)*22}ms">${!p.length && kind !== 'can' ? koi() : ''}</span>`;
     }
     const label = kind === 'can' ? `${l.q} lata${l.q>1?'s':''}` : (kind === 'bowl' || i.cat === 'handrolls' ? `${l.q} × ${i.n.split(' ')[0]}` : `${n} piezas`);
@@ -1034,7 +1035,7 @@ function spin(){
   let n = 0, delay = 55, steps = reduce ? 1 : 14 + Math.floor(Math.random()*4);
   const tick = () => {
     spinPick = SPIN_POOL[Math.floor(Math.random()*SPIN_POOL.length)];
-    $('#slotImg').src = `${IMG}${pics(spinPick)[0]}.jpg`; $('#slotName').textContent = spinPick.n; $('#slotPrice').textContent = fmt(spinPick.p);
+    $('#slotImg').src = `${pic(pics(spinPick)[0])}`; $('#slotName').textContent = spinPick.n; $('#slotPrice').textContent = fmt(spinPick.p);
     if (++n < steps && !spinStop){ delay *= 1.1; setTimeout(tick, delay); } else { slot.classList.remove('spinning'); spinning = false; }
   };
   tick();
@@ -1069,15 +1070,15 @@ refresh();
 window.__bs = {openItem, hide, code};
 }
 (function(){
-  const KEYP = 'bestsushi-planilla-v1'; let started = false, cached = null;
+  const KEYP = 'bestsushi-panel-v1'; let started = false, cached = null;
   try { cached = JSON.parse(localStorage.getItem(KEYP) || 'null'); } catch(e) {}
-  const go = rows => { if (started) return; started = true; try { if (rows) applySheet(rows); } catch(e) { console.warn('Planilla:', e); } BOOT(); };
-  if (typeof PLANILLA === 'undefined' || !PLANILLA) { go(null); return; }
-  window.__bsSheet = r => { try { const rows = sheetRows(r); try { localStorage.setItem(KEYP, JSON.stringify(rows)); } catch(e) {} go(rows); } catch(e) { console.warn('Planilla:', e); go(cached); } };
-  const sc = document.createElement('script');
-  sc.src = `https://docs.google.com/spreadsheets/d/${PLANILLA}/gviz/tq?tqx=responseHandler:__bsSheet&headers=1&gid=0&_=${Date.now()}`;
-  sc.onerror = () => go(cached); document.head.appendChild(sc);
-  setTimeout(() => go(cached), 3500);   // si Google tarda, la carta abre igual
+  const go = rows => { if (started) return; started = true; try { if (rows) applySheet(rows); } catch(e) { console.warn('Panel:', e); } BOOT(); };
+  setTimeout(() => go(cached), 3000);   // si tarda, la carta abre igual con lo último conocido
+  fetch('/api/carta').then(r => r.ok ? r.json() : null).then(d => {
+    const rows = d && Array.isArray(d.rows) ? d.rows : null;
+    if (rows) { try { localStorage.setItem(KEYP, JSON.stringify(rows)); } catch(e) {} }
+    go(rows || cached);
+  }).catch(() => go(cached));
 })();
 </script>
 

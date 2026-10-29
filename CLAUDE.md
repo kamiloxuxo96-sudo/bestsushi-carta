@@ -3,12 +3,13 @@
 Sitio estático (HTML + JS, sin build) publicado en **bestsushi.cl** con Vercel.
 Cada commit a la rama `main` se publica solo en 1–2 minutos. No hay que tocar Vercel.
 
-## Planilla de Google (lo que maneja Gaspar)
-La carta lee al abrir la planilla **"Bestsushi · Carta (precios y agotados)"** (su ID está en `PLANILLA`, en `menu.js`).
-- Desde ahí se cambian: **precio, nombre, descripción, agotado hoy, mostrar en carta, Roll del mes**, productos simples nuevos (fila sin código) y los **Ajustes**: `Hoy estamos` (Automático / Abierto / Cerrado), `Horario` (ej. `17:00 - 22:30`) y `Aviso` (texto que aparece arriba de la carta).
-- **Lo que diga la planilla manda sobre `menu.js`.** Si el usuario pide cambiar un precio o un agotado, recuérdale que lo haga en la planilla; cambiarlo en `menu.js` no se verá mientras la planilla tenga otro valor.
-- `menu.js` sigue siendo la base: fotos, opciones a elección, promociones, sugerencias y el respaldo si la planilla no responde.
-- Al agregar un producto nuevo en `menu.js`, agrégalo también como fila en la planilla con su código (`id`), o pídele al usuario que lo haga.
+## Panel de Gaspar (bestsushi.cl/admin/) — lo que manda
+- Gaspar maneja desde el panel (con clave): **precio, nombre, descripción, categoría, foto, opciones, agotado hoy, mostrar en carta, Roll del mes, productos nuevos** y **Hoy** (Automático / Abierto / Cerrado, horario y aviso).
+- Eso se guarda en **Vercel Blob** (`carta/carta.json`) mediante las funciones `api/panel.js` (guardar, con la clave `PANEL_CLAVE`, variable de entorno en Vercel) y `api/carta.js` (la carta lo lee al abrir). Las fotos del panel quedan en Blob (`fotos/…`).
+- **Lo que diga el panel manda sobre `menu.js`.** Si el usuario pide cambiar un precio, un agotado o el Roll del mes, dile que lo haga en el panel; cambiarlo en `menu.js` no se verá si el panel ya tiene ese producto guardado.
+- `menu.js` sigue siendo la base: fotos originales, opciones de los productos originales, promociones (lista de rolls), sugerencias del carrito, y el respaldo si el panel no responde.
+- Si agregas un producto en `menu.js`, también aparecerá en el panel recién cuando Gaspar lo guarde; avísale.
+- No pongas la clave del panel en ningún archivo del repositorio.
 
 ## Archivos
 - `menu.js` → **todo el contenido**: productos, precios, descripciones, fotos, opciones "a elección", horario, número de WhatsApp y destacados (Roll del mes). Casi todos los cambios se hacen aquí.

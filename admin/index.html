@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel Bestsushi</title>
+<meta name="theme-color" content="#1B5FD4">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap">
+<style>
+/* Panel de Gaspar: lo mismo que la carta (azul Bestsushi, Montserrat), pensado para el pulgar. */
+:root{
+  --blue:#1B5FD4;--blue-ink:#0A2A6B;--ink:#0E1A33;--muted:#5B6B87;--paper:#F2F5FB;--card:#fff;--line:#DDE5F2;
+  --ok:#16A34A;--warn:#C2410C;--font:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;--ease:cubic-bezier(.23,1,.32,1);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+::placeholder{color:#9AA6BC;opacity:1}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.4;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.press{transition:transform 140ms var(--ease)}.press:active{transform:scale(.96)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+.koi{display:inline-block;width:30px;height:21px;background:#fff;-webkit-mask:url('../marca/koi.png') center/contain no-repeat;mask:url('../marca/koi.png') center/contain no-repeat}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px}
+
+/* cabecera */
+.top{background:var(--blue);color:#fff;padding:calc(12px + env(safe-area-inset-top,0px)) 0 0;position:sticky;top:0;z-index:20;box-shadow:0 6px 20px rgba(20,73,184,.25)}
+.top .row{display:flex;align-items:center;gap:10px}
+.top .mark{width:38px;height:38px;border-radius:50%;background:#fff;display:grid;place-items:center;flex-shrink:0}
+.top .mark .koi{background:var(--blue)}
+.top h1{margin:0;font-size:17px;font-weight:900;letter-spacing:.12em;flex:1}
+.top h1 small{display:block;font-size:11.5px;font-weight:600;letter-spacing:0;opacity:.8}
+.top a,.top .lnk{color:#fff;font-size:12.5px;font-weight:700;text-decoration:none;background:rgba(255,255,255,.16);border:0;border-radius:999px;padding:8px 12px;white-space:nowrap}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:12px}
+.tabs button{border:0;background:transparent;color:rgba(255,255,255,.75);font-weight:800;font-size:14px;padding:12px 6px 13px;border-bottom:3px solid transparent}
+.tabs button[aria-current="true"]{color:#fff;border-bottom-color:#fff}
+
+/* estado de guardado */
+.save{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;z-index:40;background:var(--ink);color:#fff;font-weight:700;font-size:13.5px;padding:11px 18px;border-radius:999px;transition:opacity 200ms ease,transform 260ms var(--ease);pointer-events:none;white-space:nowrap;box-shadow:0 10px 26px rgba(14,26,51,.3)}
+.save.on{opacity:1;transform:translate(-50%,0)}
+.save.ok{background:var(--ok)}.save.err{background:var(--warn);white-space:normal;max-width:90vw;text-align:center}
+
+/* login */
+.login{min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(120% 90% at 85% 0%,#2E74EA 0%,var(--blue) 45%,#1449B8 100%);color:#fff}
+.login form{width:100%;max-width:340px;text-align:center}
+.login .mark{width:74px;height:74px;border-radius:50%;background:#fff;display:grid;place-items:center;margin:0 auto 16px}
+.login .mark .koi{width:52px;height:37px;background:var(--blue)}
+.login h1{margin:0 0 4px;font-size:24px;font-weight:900;letter-spacing:.14em}
+.login p{margin:0 0 22px;opacity:.85}
+.login input{width:100%;border:0;border-radius:14px;padding:16px;font-size:17px;text-align:center;background:#fff;color:var(--ink)}
+.login button{width:100%;margin-top:12px;border:0;border-radius:14px;padding:16px;font-weight:800;font-size:16px;background:var(--blue-ink);color:#fff}
+.login .msg{min-height:22px;margin-top:12px;font-weight:700;color:#FFE1C2}
+
+/* secciones y tarjetas */
+main{padding:14px 0 120px}
+.cat{margin:18px 0 8px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;justify-content:space-between}
+.search{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px;background:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:10px;overflow:hidden}
+.card.off{opacity:.62}
+.card.out .pname::after{content:'Agotado hoy';margin-left:8px;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#B42318;background:#FEE4E2;padding:2px 7px;border-radius:999px;vertical-align:2px}
+.card.rdm{border-color:var(--blue);box-shadow:inset 0 0 0 1.5px var(--blue)}
+.ph{display:flex;gap:12px;padding:12px}
+.thumb{width:64px;height:64px;border-radius:12px;flex-shrink:0;background:linear-gradient(145deg,#2B6FE0,#1449B8) center/cover;display:grid;place-items:center}
+.body{flex:1;min-width:0}
+.pname{font-weight:800;font-size:15.5px;line-height:1.2;margin:2px 0 8px}
+.pname .tag{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:800;color:#fff;background:var(--blue);padding:2px 7px;border-radius:999px;vertical-align:2px}
+.price{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;width:132px;background:#fff;overflow:hidden}
+.price span{padding:0 4px 0 11px;font-weight:800;color:var(--muted)}
+.price input{border:0;width:100%;padding:10px 10px 10px 2px;font-size:16px;font-weight:800;background:transparent;outline:none}
+.price:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,95,212,.18)}
+.sw{display:flex;gap:8px;padding:0 12px 12px;flex-wrap:wrap}
+.tg{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px 8px 8px;font-weight:700;font-size:13px}
+.tg i{width:34px;height:20px;border-radius:999px;background:#CBD5E6;position:relative;transition:background-color 180ms ease;flex-shrink:0}
+.tg i::after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform 220ms var(--ease)}
+.tg[aria-pressed="true"] i{background:var(--blue)}
+.tg[aria-pressed="true"] i::after{transform:translateX(14px)}
+.tg.red[aria-pressed="true"] i{background:#DC2626}
+.tg.more{margin-left:auto;padding:8px 12px;color:var(--blue-ink)}
+.edit{border-top:1px dashed var(--line);padding:4px 12px 14px;display:none}
+.card.open .edit{display:block}
+.fld{display:grid;gap:6px;margin-top:12px}
+.fld label{font-size:12.5px;font-weight:800;color:var(--muted)}
+.fld input,.fld textarea,.fld select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:16px;background:#fff}
+.fld textarea{resize:vertical;min-height:70px}
+.fld small{color:var(--muted);font-size:12px}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,95,212,.18)}
+.photo{display:flex;gap:12px;align-items:center}
+.photo .thumb{width:84px;height:84px}
+.btn{border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-line{background:var(--paper);color:var(--blue-ink);border:1.5px solid var(--line)}
+.btn-red{background:#FEE4E2;color:#B42318}
+.btn[disabled]{opacity:.5}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.row-btns .btn{flex:1 1 140px;white-space:nowrap}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* hoy */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px}
+.panel h2{margin:0 0 4px;font-size:18px;font-weight:900}
+.panel p.h{margin:0 0 8px;color:var(--muted);font-size:13.5px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--paper);border-radius:14px;padding:4px;margin-top:10px}
+.seg button{border:0;background:transparent;border-radius:11px;padding:13px 4px;font-weight:800;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--blue-ink);box-shadow:0 1px 4px rgba(8,18,40,.14)}
+.seg button[data-v="Cerrado"][aria-pressed="true"]{color:#B42318}
+.seg button[data-v="Abierto"][aria-pressed="true"]{color:var(--ok)}
+.hours{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+.loading{display:grid;place-items:center;padding:60px 0;color:var(--muted);font-weight:700}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--blue);animation:sp 800ms linear infinite;margin:0 auto 12px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:1ms!important}}
+</style>
+</head>
+<body>
+
+<!-- ACCESO -->
+<section class="login" id="login" hidden>
+  <form id="loginForm" autocomplete="on">
+    <div class="mark"><span class="koi"></span></div>
+    <h1>BESTSUSHI</h1>
+    <p>Panel de la carta</p>
+    <input id="pin" type="password" inputmode="text" autocomplete="current-password" placeholder="Clave" aria-label="Clave del panel" required>
+    <button class="press" type="submit" id="loginBtn">Entrar</button>
+    <div class="msg" id="loginMsg" role="alert"></div>
+  </form>
+</section>
+
+<!-- PANEL -->
+<div id="app" hidden>
+  <header class="top">
+    <div class="wrap">
+      <div class="row">
+        <span class="mark"><span class="koi"></span></span>
+        <h1>BESTSUSHI<small>Panel de la carta</small></h1>
+        <a href="/" target="_blank" rel="noopener">Ver carta ↗</a>
+        <button class="lnk press" type="button" id="logout">Salir</button>
+      </div>
+      <nav class="tabs" aria-label="Secciones">
+        <button type="button" data-tab="prod" aria-current="true">Productos</button>
+        <button type="button" data-tab="hoy" aria-current="false">Hoy</button>
+        <button type="button" data-tab="nuevo" aria-current="false">+ Nuevo</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- productos -->
+    <section id="tab-prod">
+      <input class="search" id="q" type="search" placeholder="Buscar producto…" aria-label="Buscar producto">
+      <div id="list"><div class="loading"><div><div class="spin"></div>Cargando la carta…</div></div></div>
+    </section>
+
+    <!-- hoy -->
+    <section id="tab-hoy" hidden>
+      <div class="panel">
+        <h2>¿Cómo estamos hoy?</h2>
+        <p class="h">Automático sigue el horario. Usa Abierto o Cerrado cuando abran antes o cierren antes, y después vuelve a Automático.</p>
+        <div class="seg" id="estado"><button type="button" data-v="Automático">Automático</button><button type="button" data-v="Abierto">Abierto</button><button type="button" data-v="Cerrado">Cerrado</button></div>
+        <div class="hours" style="margin-top:6px">
+          <div class="fld"><label for="hOpen">Abrimos</label><input type="time" id="hOpen"></div>
+          <div class="fld"><label for="hClose">Cerramos</label><input type="time" id="hClose"></div>
+        </div>
+        <div class="fld"><label for="aviso">Aviso para los clientes</label><textarea id="aviso" rows="2" placeholder="Ej: Hoy abrimos a las 18:00"></textarea><small>Sale arriba de la carta. Déjalo vacío para no mostrar nada.</small></div>
+        <div class="row-btns"><button class="btn btn-blue press" type="button" id="saveHoy">Guardar</button></div>
+      </div>
+    </section>
+
+    <!-- nuevo -->
+    <section id="tab-nuevo" hidden>
+      <form class="panel" id="newForm">
+        <h2>Producto nuevo</h2>
+        <p class="h">Aparece en la carta apenas lo guardes.</p>
+        <div class="fld"><label for="nCat">Categoría</label><select id="nCat"></select></div>
+        <div class="fld" id="nCatOtraF" hidden><label for="nCatOtra">Nombre de la categoría nueva</label><input id="nCatOtra" placeholder="Ej: Postres"></div>
+        <div class="fld"><label for="nName">Nombre</label><input id="nName" required placeholder="Ej: Roll acevichado de pulpo"></div>
+        <div class="fld"><label for="nDesc">Descripción</label><textarea id="nDesc" rows="2" placeholder="Ingredientes, cuántas piezas…"></textarea></div>
+        <div class="fld"><label for="nPrice">Precio</label><div class="price" style="width:100%"><span>$</span><input id="nPrice" inputmode="numeric" required placeholder="6500"></div></div>
+        <div class="fld"><label>Foto</label>
+          <div class="photo"><span class="thumb" id="nThumb"><span class="koi"></span></span>
+            <label class="btn btn-line filebtn press">📷 Elegir foto<input type="file" accept="image/*" id="nFile"></label></div></div>
+        <div class="fld"><label for="nOpc">Opciones para elegir (opcional)</label><textarea id="nOpc" rows="2" placeholder="Proteína: Pollo, Camarón, Salmón"></textarea>
+          <small>Una por línea: "Título: opción, opción". El cliente tendrá que elegir una de cada línea.</small></div>
+        <div class="row-btns"><button class="btn btn-blue press" type="submit" id="nSave">Agregar a la carta</button></div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<div class="save" id="save" role="status" aria-live="polite"></div>
+
+<script src="../menu.js"></script>
+<script>
+/* ======================= PANEL ======================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const fmt = n => '$' + Number(n||0).toLocaleString('es-CL');
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+const yes = v => /^(si|x|true|verdadero|1)/.test(norm(v));
+const no = v => /^(no|false|falso|0)$/.test(norm(v));
+const API = '/api/panel';
+const KEYC = 'bestsushi-panel-clave';
+let clave = ''; try { clave = localStorage.getItem(KEYC) || ''; } catch(e) {}
+let rows = [], openId = null;
+
+// datos de la carta original (fotos y opciones que vienen del código)
+const BASE = {}; (typeof MENU !== 'undefined' ? MENU : []).forEach(c => c.items.forEach(i => BASE[i.id] = {...i, catName: c.name.join('')}));
+const pics = i => i ? (i.imgs || (i.img ? [i.img] : [])) : [];
+const picUrl = p => /^https?:/.test(p) ? p : '../fotos/' + p + '.jpg';
+const photoOf = r => { const f = String(r.foto || '').trim().split(/\s+/)[0]; if (/^https:/.test(f)) return f; const p = pics(BASE[r.id]); return p.length ? picUrl(p[0]) : ''; };
+const optsText = id => { const b = BASE[id]; if (!b || !b.o || !OPTS[b.o]) return ''; return OPTS[b.o].map(g => `${g.k}: ${g.c.join(', ')}`).join('\n'); };
+
+/* ---------- comunicación con la planilla ---------- */
+async function api(accion, extra){
+  let r; try { r = await fetch(API, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({clave, accion, ...(extra||{})})}); }
+  catch(e) { throw new Error('Sin conexión. Revisa el internet e intenta de nuevo.'); }
+  let j; try { j = await r.json(); } catch(e) { throw new Error('El panel no respondió bien. Intenta de nuevo.'); }
+  if (!j.ok) throw new Error(j.error || 'Error');
+  return j.data;
+}
+/* todo se guarda como una sola lista; los guardados van en fila para que no se pisen */
+let queue = Promise.resolve();
+function persist(label){ const snap = JSON.parse(JSON.stringify(rows)); const p = queue.then(() => run(label, () => api('guardar', {rows: snap}))); queue = p.catch(() => {}); return p; }
+/* la primera vez no hay nada guardado: se parte con la carta actual (menu.js) */
+function seed(){
+  const out = [{cat:'Ajustes', n:'Hoy estamos', d:'Automático'}, {cat:'Ajustes', n:'Horario', d:`${HOURS.open} - ${HOURS.close}`}, {cat:'Ajustes', n:'Aviso', d:''}];
+  const rdm = FEATURED[0] && FEATURED[0][0];
+  MENU.forEach(c => { const cat = c.name.join('').toLowerCase().replace(/^./, x => x.toUpperCase());
+    c.items.forEach(i => out.push({cat, n:i.n, d:c.promo ? '' : (i.d || ''), p:i.p, ag:i.agotado ? 'SI' : 'NO', ver:i.oculto ? 'NO' : 'SI', rdm:i.id === rdm ? 'SI' : 'NO', id:i.id, foto:'', opc:''})); });
+  return out;
+}
+async function load(){
+  const d = await api('listar'), base = seed();
+  if (!Array.isArray(d) || !d.length) { rows = base; return; }
+  rows = d;   // productos agregados después a menu.js también aparecen en el panel
+  base.forEach(b => { const has = b.id ? rows.some(r => String(r.id) === b.id) : rows.some(r => norm(r.cat).startsWith('ajuste') && norm(r.n) === norm(b.n)); if (!has) rows.push(b); });
+}
+let st; function say(t, kind){ const el = $('#save'); el.textContent = t; el.className = 'save on ' + (kind||''); clearTimeout(st); if (kind) st = setTimeout(() => el.className = 'save', kind === 'err' ? 4500 : 1600); }
+async function run(label, fn){ say(label + '…'); try { const r = await fn(); say('Guardado ✓', 'ok'); return r; } catch(e) { say(e.message, 'err'); throw e; } }
+
+/* ---------- acceso ---------- */
+async function enter(){
+  $('#login').hidden = true; $('#app').hidden = false;
+  try { await load(); render(); fillHoy(); fillCats(); }
+  catch(e){ if (/clave/i.test(e.message)) { logout(e.message); } else $('#list').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+function logout(msg){ clave = ''; try { localStorage.removeItem(KEYC); } catch(e) {} $('#app').hidden = true; $('#login').hidden = false; $('#loginMsg').textContent = msg || ''; $('#pin').value = ''; }
+$('#loginForm').onsubmit = async e => {
+  e.preventDefault(); clave = $('#pin').value.trim(); $('#loginBtn').disabled = true; $('#loginMsg').textContent = '';
+  try { await load(); try { localStorage.setItem(KEYC, clave); } catch(x) {} $('#login').hidden = true; $('#app').hidden = false; render(); fillHoy(); fillCats(); }
+  catch(err){ $('#loginMsg').textContent = /clave/i.test(err.message) ? 'Clave incorrecta' : err.message; }
+  $('#loginBtn').disabled = false;
+};
+$('#logout').onclick = () => logout('');
+if (clave) enter(); else $('#login').hidden = false;
+
+/* ---------- pestañas ---------- */
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-current', x === b));
+  ['prod','hoy','nuevo'].forEach(t => $('#tab-' + t).hidden = t !== b.dataset.tab); scrollTo({top:0});
+});
+
+/* ---------- productos ---------- */
+const products = () => rows.filter(r => r.id && !norm(r.cat).startsWith('ajuste'));
+function render(){
+  const q = norm($('#q').value), order = cats(), byCat = c => order.indexOf(String(c || '').trim());
+  const list = products().filter(r => !q || norm(r.n).includes(q) || norm(r.cat).includes(q)).map((r,i) => [r,i]).sort((a,b) => byCat(a[0].cat) - byCat(b[0].cat) || a[1] - b[1]).map(x => x[0]);
+  if (!list.length) { $('#list').innerHTML = `<div class="empty">${q ? 'No hay productos con ese nombre.' : 'La planilla no tiene productos.'}</div>`; return; }
+  let html = '', last = null;
+  list.forEach(r => {
+    if (r.cat !== last) { last = r.cat; html += `<div class="cat"><span>${esc(r.cat || 'Sin categoría')}</span></div>`; }
+    const ph = photoOf(r), out = yes(r.ag), shown = !no(r.ver), isR = yes(r.rdm);
+    html += `<article class="card ${out?'out':''} ${shown?'':'off'} ${isR?'rdm':''} ${openId===String(r.id)?'open':''}" data-id="${esc(r.id)}">
+      <div class="ph"><span class="thumb" style="${ph?`background-image:url('${esc(ph)}')`:''}">${ph?'':'<span class="koi"></span>'}</span>
+        <div class="body"><div class="pname">${esc(r.n)}${isR?'<span class="tag">Roll del mes</span>':''}</div>
+          <label class="price"><span>$</span><input inputmode="numeric" data-price value="${esc(r.p)}" aria-label="Precio de ${esc(r.n)}"></label></div></div>
+      <div class="sw">
+        <button type="button" class="tg red press" data-ag aria-pressed="${out}"><i></i>Agotado hoy</button>
+        <button type="button" class="tg press" data-ver aria-pressed="${shown}"><i></i>En la carta</button>
+        <button type="button" class="tg more press" data-more aria-expanded="${openId===String(r.id)}">${openId===String(r.id)?'Cerrar':'Editar'}</button>
+      </div>
+      <div class="edit">${openId===String(r.id) ? editHTML(r) : ''}</div>
+    </article>`;
+  });
+  $('#list').innerHTML = html;
+}
+function editHTML(r){
+  const ph = photoOf(r), base = optsText(r.id);
+  return `<div class="fld"><label>Nombre</label><input data-f="n" value="${esc(r.n)}"></div>
+    <div class="fld"><label>Descripción</label><textarea data-f="d" rows="2" placeholder="${BASE[r.id]&&BASE[r.id].rolls?'(las promociones muestran su lista de rolls)':''}">${esc(r.d)}</textarea></div>
+    <div class="fld"><label>Categoría</label><select data-f="cat">${cats().map(c => `<option${c===r.cat?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
+    <div class="fld"><label>Foto</label><div class="photo"><span class="thumb" data-thumb style="${ph?`background-image:url('${esc(ph)}')`:''}">${ph?'':'<span class="koi"></span>'}</span>
+      <label class="btn btn-line filebtn press">📷 Cambiar foto<input type="file" accept="image/*" data-file></label></div></div>
+    <div class="fld"><label>Opciones para elegir</label><textarea data-f="opc" rows="2" placeholder="${esc(base || 'Proteína: Pollo, Camarón')}">${esc(r.opc)}</textarea>
+      <small>${base ? 'Vacío = se mantienen las opciones actuales (las de arriba en gris).' : 'Una por línea: "Título: opción, opción". Opcional.'}</small></div>
+    <div class="row-btns">
+      <button type="button" class="btn btn-blue press" data-saveedit>Guardar cambios</button>
+      ${yes(r.rdm) ? '' : '<button type="button" class="btn btn-line press" data-rdm>⭐ Roll del mes</button>'}
+      ${/^n/.test(String(r.id)) ? '<button type="button" class="btn btn-red press" data-del>Borrar</button>' : ''}
+    </div>`;
+}
+const rowOf = el => rows.find(r => String(r.id) === el.closest('.card').dataset.id);
+$('#q').oninput = render;
+$('#list').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return; const r = rowOf(b); if (!r) return;
+  if (b.matches('[data-more]')) { openId = openId === String(r.id) ? null : String(r.id); render(); return; }
+  if (b.matches('[data-ag]')) { const v = yes(r.ag) ? 'NO' : 'SI'; r.ag = v; render(); await persist(v==='SI'?'Marcando agotado':'Quitando agotado').catch(() => { r.ag = v==='SI'?'NO':'SI'; render(); }); return; }
+  if (b.matches('[data-ver]')) { const v = no(r.ver) ? 'SI' : 'NO'; r.ver = v; render(); await persist(v==='SI'?'Mostrando':'Ocultando').catch(() => { r.ver = v==='SI'?'NO':'SI'; render(); }); return; }
+  if (b.matches('[data-rdm]')) { const campos = {...pending(b.closest('.card'), r), rdm:'SI'};
+    rows.forEach(x => { if (x.id) x.rdm = 'NO'; }); Object.assign(r, campos); render(); await persist('Cambiando Roll del mes').catch(() => {}); return; }
+  if (b.matches('[data-del]')) { if (!confirmDel(r)) return; rows = rows.filter(x => x !== r); openId = null; render(); await persist('Borrando').catch(() => {}); return; }
+  if (b.matches('[data-saveedit]')) {
+    const campos = pending(b.closest('.card'), r);
+    openId = null; if (k0(campos)) { Object.assign(r, campos); render(); await persist('Guardando').catch(() => {}); } else render(); return;
+  }
+});
+const k0 = o => Object.keys(o).length;
+function pending(card, r){ const campos = {}; card.querySelectorAll('[data-f]').forEach(f => { const k = f.dataset.f, v = f.value.trim(); if (String(r[k] ?? '') !== v) campos[k] = v; }); return campos; }
+function confirmDel(r){ return window.confirm(`¿Borrar "${r.n}" de la carta?`); }
+// precio: guarda al salir del campo o con Enter
+$('#list').addEventListener('change', async e => {
+  const inp = e.target;
+  if (inp.matches('[data-price]')) { const r = rowOf(inp), v = Number(inp.value.replace(/[^0-9]/g,'')); if (!v) { inp.value = r.p; say('Escribe solo el número, ej: 6500', 'err'); return; }
+    if (v === Number(r.p)) return; const old = r.p; r.p = v; inp.value = v;
+    await persist('Guardando precio').catch(() => { r.p = old; inp.value = old; }); }
+  if (inp.matches('[data-file]') && inp.files[0]) { const r = rowOf(inp), card = inp.closest('.card');
+    try { const url = await run('Subiendo foto', async () => { const b64 = await shrink(inp.files[0]); return (await api('foto', {base64:b64, nombre:String(r.n)})).url; });
+      r.foto = url; card.querySelector('[data-thumb]').style.backgroundImage = `url('${url}')`; card.querySelector('[data-thumb]').innerHTML = ''; await persist('Guardando foto'); } catch(x) {} }
+});
+$('#list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-price]')) e.target.blur(); });
+
+/* ---------- foto: se achica en el celular antes de subir ---------- */
+function shrink(file, size = 900){
+  return new Promise((ok, bad) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { const s = Math.min(img.naturalWidth, img.naturalHeight), c = document.createElement('canvas'); c.width = c.height = Math.min(size, s);
+      c.getContext('2d').drawImage(img, (img.naturalWidth - s)/2, (img.naturalHeight - s)/2, s, s, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', .82).split(',')[1]); };
+    img.onerror = () => bad(new Error('No pude leer esa foto. Prueba con otra.')); img.src = url;
+  });
+}
+
+/* ---------- hoy ---------- */
+const ajuste = name => rows.find(r => norm(r.cat).startsWith('ajuste') && norm(r.n).startsWith(norm(name).slice(0,4)));
+function fillHoy(){
+  const e = ajuste('Hoy estamos'), h = ajuste('Horario'), a = ajuste('Aviso');
+  const ev = norm(e && e.d); setEstado(ev.startsWith('abiert') ? 'Abierto' : ev.startsWith('cerrad') ? 'Cerrado' : 'Automático');
+  const t = String(h && h.d || '').match(/(\d{1,2})(?:[:.h](\d{2}))?\D+(\d{1,2})(?:[:.h](\d{2}))?/);
+  const f = (H,M) => String(+H).padStart(2,'0') + ':' + (M || '00');
+  $('#hOpen').value = t ? f(t[1],t[2]) : (typeof HOURS !== 'undefined' ? HOURS.open : '17:00');
+  $('#hClose').value = t ? f(t[3],t[4]) : (typeof HOURS !== 'undefined' ? HOURS.close : '22:30');
+  $('#aviso').value = a ? (a.d || '') : '';
+}
+function setEstado(v){ document.querySelectorAll('#estado button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v)); }
+$('#estado').onclick = e => { const b = e.target.closest('button'); if (b) setEstado(b.dataset.v); };
+$('#saveHoy').onclick = async () => {
+  const estado = $('#estado [aria-pressed="true"]').dataset.v, horario = `${$('#hOpen').value} - ${$('#hClose').value}`, aviso = $('#aviso').value.trim();
+  [['Hoy estamos',estado],['Horario',horario],['Aviso',aviso]].forEach(([n,v]) => { const r = ajuste(n); if (r) r.d = v; else rows.unshift({cat:'Ajustes', n, d:v}); });
+  await persist('Guardando').catch(() => {});
+};
+
+/* ---------- nuevo producto ---------- */
+const cats = () => [...new Set(products().map(r => String(r.cat || '').trim()).filter(Boolean))];
+function fillCats(){ $('#nCat').innerHTML = cats().map(c => `<option>${esc(c)}</option>`).join('') + '<option value="__otra">+ Categoría nueva…</option>'; }
+$('#nCat').onchange = () => $('#nCatOtraF').hidden = $('#nCat').value !== '__otra';
+let nPhoto = null;
+$('#nFile').onchange = async () => { const f = $('#nFile').files[0]; if (!f) return; try { nPhoto = await shrink(f); $('#nThumb').style.backgroundImage = `url('data:image/jpeg;base64,${nPhoto}')`; $('#nThumb').innerHTML = ''; } catch(e) { say(e.message, 'err'); } };
+$('#newForm').onsubmit = async e => {
+  e.preventDefault();
+  const cat = $('#nCat').value === '__otra' ? $('#nCatOtra').value.trim() : $('#nCat').value, p = Number($('#nPrice').value.replace(/[^0-9]/g,''));
+  if (!cat) { say('Escribe el nombre de la categoría nueva', 'err'); return; }
+  if (!p) { say('Escribe el precio, solo el número', 'err'); return; }
+  $('#nSave').disabled = true;
+  try {
+    const campos = {cat, n:$('#nName').value.trim(), d:$('#nDesc').value.trim(), p, opc:$('#nOpc').value.trim()};
+    if (nPhoto) campos.foto = await run('Subiendo foto', async () => (await api('foto', {base64:nPhoto, nombre:campos.n})).url);
+    const nuevo = {...campos, id:'n' + Date.now().toString(36), ag:'NO', ver:'SI', rdm:'NO'};
+    rows.push(nuevo); await persist('Agregando').catch(e => { rows = rows.filter(x => x !== nuevo); throw e; });
+    e.target.reset(); nPhoto = null; $('#nThumb').style.backgroundImage = ''; $('#nThumb').innerHTML = '<span class="koi"></span>'; $('#nCatOtraF').hidden = true;
+    fillCats(); render(); document.querySelector('[data-tab="prod"]').click();
+  } catch(x) {}
+  $('#nSave').disabled = false;
+};
+</script>
+</body>
+</html>
