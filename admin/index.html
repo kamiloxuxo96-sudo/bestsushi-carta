@@ -98,6 +98,34 @@ main{padding:14px 0 120px}
 .gp button.main{border:0;background:transparent;padding:2px;width:100%;color:var(--muted);text-decoration:underline}
 .addph{width:84px;height:84px;border:2px dashed #B7C4DA;border-radius:12px;display:grid;place-items:center;text-align:center;font-size:11.5px;font-weight:800;color:var(--blue-ink);background:#F7F9FD;position:relative;overflow:hidden;line-height:1.2}
 .addph input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* editor de opciones y de promociones */
+.og{border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-top:10px;background:#FAFBFE}
+.og-h{display:flex;gap:8px;align-items:center}
+.og-h input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:10px;font-size:15px;font-weight:800;background:#fff}
+.icon{width:38px;height:38px;border-radius:10px;border:0;background:#FEE4E2;color:#B42318;font-size:16px;font-weight:800;flex-shrink:0;display:grid;place-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:6px 6px 6px 12px;font-weight:700;font-size:13.5px}
+.chip button{border:0;background:#EEF2F8;color:var(--muted);width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:800;padding:0;display:grid;place-items:center}
+.addc{display:flex;gap:6px;margin-top:8px}
+.addc input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:9px 10px;font-size:15px;background:#fff}
+.addc button{border:0;border-radius:10px;padding:0 14px;background:var(--blue);color:#fff;font-weight:800}
+.og-o{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:10px;font-size:13px;font-weight:700;color:var(--muted)}
+.og-o select,.og-o input{border:1.5px solid var(--line);border-radius:10px;padding:7px 8px;font-size:14px;font-weight:700;background:#fff;color:var(--ink)}
+.og-o input{width:84px}
+.og-o .tg{padding:6px 10px 6px 6px}
+.addg{margin-top:10px;width:100%;border:2px dashed #B7C4DA;background:#F7F9FD;color:var(--blue-ink);border-radius:12px;padding:12px;font-weight:800}
+.pl{display:grid;grid-template-columns:52px 1fr 38px;gap:6px;margin-top:8px;align-items:start}
+.pl input{width:100%;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:9px 8px;font-size:14.5px;background:#fff}
+.pl .q{text-align:center;font-weight:800}
+.pl .nf{display:grid;gap:4px}
+.pl .nf input+input{font-size:13px;color:var(--muted)}
+.prow{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}
+.prow .fld{margin-top:0;flex:1 1 110px}
+.excard{background:#fff;border:1.5px dashed #B7C4DA;border-radius:18px;padding:12px;margin-bottom:10px}
+.excard h3{margin:0;font-size:14.5px;font-weight:800}
+.excard p{margin:2px 0 4px;font-size:12.5px;color:var(--muted)}
+.ex{display:grid;grid-template-columns:1fr 96px 38px;gap:6px;margin-top:8px}
+.ex input{width:100%;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:9px 8px;font-size:14.5px;background:#fff}
 .btn{border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn-blue{background:var(--blue);color:#fff}
 .btn-line{background:var(--paper);color:var(--blue-ink);border:1.5px solid var(--line)}
@@ -227,7 +255,39 @@ const galHTML = r => photosOf(r).map((f,k) => `<div class="gp"><span class="thum
     <button type="button" class="x press" data-delph="${k}" aria-label="Quitar foto">✕</button>
     ${k ? `<button type="button" class="main" data-mainph="${k}">Poner primera</button>` : '<span class="main">Principal</span>'}</div>`).join('')
   + `<label class="addph press">📷<br>Agregar<br>fotos<input type="file" accept="image/*" multiple data-file></label>`;
-const optsText = id => { const b = BASE[id]; if (!b || !b.o || !OPTS[b.o]) return ''; return OPTS[b.o].map(g => `${g.k}: ${g.c.join(', ')}`).join('\n'); };
+const clone = o => JSON.parse(JSON.stringify(o));
+const parseJSON = (t, d) => { try { const v = JSON.parse(t); return v; } catch(e) { return d; } };
+function optsOf(r){   // grupos de opciones: lo guardado en el panel, o las de la carta original
+  const t = String(r.opc || '').trim();
+  if (t.startsWith('[')) return parseJSON(t, []);
+  if (t) return t.split(/[;\n]+/).map(g => { const [k, ...rest] = g.split(':'); const c = (rest.length ? rest.join(':') : k).split(',').map(x => x.trim()).filter(Boolean); return {k: rest.length ? k.trim() : 'Elige', c, n:1, min:1}; });
+  const b = BASE[r.id]; return b && b.o && OPTS[b.o] ? clone(OPTS[b.o]).map(g => ({min: g.min ?? (g.n || 1), n: g.n || 1, ...g})) : [];
+}
+function rollsOf(r){ const t = String(r.rolls || '').trim(); if (t.startsWith('[')) return parseJSON(t, []); const b = BASE[r.id]; return b && b.rolls ? clone(b.rolls) : []; }
+const isPromo = r => norm(r.cat).startsWith('promo') || !!(BASE[r.id] && BASE[r.id].rolls);
+let draft = null;   // lo que se está editando en la tarjeta abierta
+function openDraft(r){ const b = BASE[r.id] || {};
+  draft = {opts: optsOf(r), optsDirty:false, rolls: rollsOf(r), promoDirty:false,
+    big: r.big || b.big || '', tag: r.tag ?? b.tag ?? '', esp: r.esp ? yes(r.esp) : b.tipo === 'especial'}; }
+function optsHTML(){
+  return draft.opts.map((g,gi) => `<div class="og">
+      <div class="og-h"><input data-og-k="${gi}" value="${esc(g.k)}" placeholder="Título, ej: Proteína" aria-label="Título del grupo"><button type="button" class="icon press" data-og-del="${gi}" aria-label="Quitar grupo">🗑</button></div>
+      <div class="chips">${g.c.map((c,ci) => `<span class="chip">${esc(c)}<button type="button" data-oc-del="${gi}:${ci}" aria-label="Quitar ${esc(c)}">✕</button></span>`).join('') || '<small style="color:var(--muted)">Sin opciones todavía</small>'}</div>
+      <div class="addc"><input data-oc-new="${gi}" placeholder="Agregar opción, ej: Salmón" aria-label="Nueva opción"><button type="button" class="press" data-oc-add="${gi}">Agregar</button></div>
+      <div class="og-o"><label>Puede elegir <select data-og-n="${gi}">${[1,2,3,4,5].map(n => `<option${(g.n||1)===n?' selected':''}>${n}</option>`).join('')}</select></label>
+        <button type="button" class="tg press" data-og-req="${gi}" aria-pressed="${(g.min ?? 1) > 0}"><i></i>Obligatorio</button>
+        <label>+$ c/u <input data-og-x="${gi}" inputmode="numeric" value="${g.extra || ''}" placeholder="0"></label></div>
+    </div>`).join('') + `<button type="button" class="addg press" data-og-add>+ Agregar grupo de opciones</button>`;
+}
+function promoHTML(){
+  return `<div class="prow"><div class="fld"><label>Piezas en total</label><input data-pf="big" inputmode="numeric" value="${esc(draft.big)}" placeholder="50"></div>
+      <div class="fld"><label>Etiqueta</label><input data-pf="tag" value="${esc(draft.tag)}" placeholder="Mix"></div>
+      <button type="button" class="tg press" data-pf-esp aria-pressed="${draft.esp}" style="margin-bottom:6px"><i></i>⭐ Especial</button></div>
+    <div data-pl>${draft.rolls.map((l,i) => `<div class="pl"><input class="q" data-pr="${i}:0" inputmode="numeric" value="${esc(l[0])}" placeholder="10" aria-label="Cantidad">
+      <div class="nf"><input data-pr="${i}:1" value="${esc(l[1])}" placeholder="Roll, ej: Frito en panko" aria-label="Roll"><input data-pr="${i}:2" value="${esc(l[2] || '')}" placeholder="Relleno (opcional)" aria-label="Relleno"></div>
+      <button type="button" class="icon press" data-pr-del="${i}" aria-label="Quitar línea">🗑</button></div>`).join('')}</div>
+    <button type="button" class="addg press" data-pr-add>+ Agregar línea</button>`;
+}
 
 /* ---------- comunicación con la planilla ---------- */
 async function api(accion, extra){
@@ -287,7 +347,8 @@ function render(){
   if (!list.length) { $('#list').innerHTML = `<div class="empty">${q ? 'No hay productos con ese nombre.' : 'La planilla no tiene productos.'}</div>`; return; }
   let html = '', last = null;
   list.forEach(r => {
-    if (r.cat !== last) { last = r.cat; html += `<div class="cat"><span>${esc(r.cat || 'Sin categoría')}</span></div>`; }
+    if (r.cat !== last) { last = r.cat; html += `<div class="cat"><span>${esc(r.cat || 'Sin categoría')}</span></div>`;
+      if (norm(r.cat).startsWith('promo') && !q) html += extrasHTML(); }
     const ph = photoOf(r), out = yes(r.ag), shown = !no(r.ver), isR = yes(r.rdm);
     html += `<article class="card ${out?'out':''} ${shown?'':'off'} ${isR?'rdm':''} ${openId===String(r.id)?'open':''}" data-id="${esc(r.id)}">
       <div class="ph"><span class="thumb" style="${ph?`background-image:url('${esc(ph)}')`:''}">${ph?'':'<span class="koi"></span>'}</span>
@@ -303,14 +364,32 @@ function render(){
   });
   $('#list').innerHTML = html;
 }
+/* tabla "los rellenos se pueden cambiar con costo adicional" que sale bajo el título de Promociones */
+let exDraft = null;
+function extrasOf(){ const a = ajuste('Extras promociones'); if (a && String(a.d || '').trim().startsWith('[')) return parseJSON(a.d, []);
+  const pc = (typeof MENU !== 'undefined' ? MENU : []).find(c => c.promo); return pc && pc.extras ? clone(pc.extras).map(([n,v]) => [n, String(v).replace(/[^0-9]/g,'')]) : []; }
+function extrasHTML(){ if (!exDraft) exDraft = extrasOf();
+  return `<div class="excard"><h3>Cambios con costo en las promociones</h3><p>Sale bajo el título de Promociones en la carta.</p><div data-exl>${exDraft.map((x,i) => `<div class="ex">
+      <input data-ex="${i}:0" value="${esc(x[0])}" placeholder="Ej: Envoltura en palta" aria-label="Cambio"><input data-ex="${i}:1" inputmode="numeric" value="${esc(String(x[1]).replace(/[^0-9]/g,''))}" placeholder="2000" aria-label="Precio">
+      <button type="button" class="icon press" data-ex-del="${i}" aria-label="Quitar">🗑</button></div>`).join('')}</div>
+    <div class="row-btns"><button type="button" class="btn btn-line press" data-ex-add>+ Agregar</button><button type="button" class="btn btn-blue press" data-ex-save>Guardar</button></div></div>`; }
+$('#list').addEventListener('input', e => { const t = e.target; if (t.dataset.ex === undefined) return; const [i,k] = t.dataset.ex.split(':').map(Number); exDraft[i][k] = t.value; });
+$('#list').addEventListener('click', async e => { const b = e.target.closest('[data-ex-add],[data-ex-del],[data-ex-save]'); if (!b) return; e.stopPropagation();
+  const box = () => b.closest('.excard').querySelector('[data-exl]');
+  if (b.matches('[data-ex-add]')) { exDraft.push(['', '']); render(); return; }
+  if (b.matches('[data-ex-del]')) { exDraft.splice(+b.dataset.exDel, 1); render(); return; }
+  const val = JSON.stringify(exDraft.filter(x => String(x[0]).trim()).map(x => [String(x[0]).trim(), '+' + fmt(Number(String(x[1]).replace(/[^0-9]/g,'')) || 0)]));
+  const a = ajuste('Extras promociones'); if (a) a.d = val; else rows.unshift({cat:'Ajustes', n:'Extras promociones', d:val});
+  await persist('Guardando cambios con costo').catch(() => {}); }, true);
 function editHTML(r){
-  const base = optsText(r.id);
+  const promo = isPromo(r);
   return `<div class="fld"><label>Nombre</label><input data-f="n" value="${esc(r.n)}"></div>
-    <div class="fld"><label>Descripción</label><textarea data-f="d" rows="2" placeholder="${BASE[r.id]&&BASE[r.id].rolls?'(las promociones muestran su lista de rolls)':''}">${esc(r.d)}</textarea></div>
+    ${promo ? `<div class="fld"><label>Contenido de la promoción</label><div data-promo>${promoHTML()}</div></div>`
+      : `<div class="fld"><label>Descripción</label><textarea data-f="d" rows="2">${esc(r.d)}</textarea></div>`}
     <div class="fld"><label>Categoría</label><select data-f="cat">${cats().map(c => `<option${c===r.cat?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
     <div class="fld"><label>Fotos</label><div class="gal" data-gal>${galHTML(r)}</div><small>La primera es la que se ve en la carta. Si hay varias, el cliente las desliza.</small></div>
-    <div class="fld"><label>Opciones para elegir</label><textarea data-f="opc" rows="2" placeholder="${esc(base || 'Proteína: Pollo, Camarón')}">${esc(r.opc)}</textarea>
-      <small>${base ? 'Vacío = se mantienen las opciones actuales (las de arriba en gris).' : 'Una por línea: "Título: opción, opción". Opcional.'}</small></div>
+    <div class="fld"><label>Opciones para elegir (proteínas, vegetales, salsas…)</label><div data-opts>${optsHTML()}</div>
+      <small>El cliente elige al tocar el producto. "+$ c/u" suma ese valor por cada opción elegida (ej. palta extra).</small></div>
     <div class="row-btns">
       <button type="button" class="btn btn-blue press" data-saveedit>Guardar cambios</button>
       ${yes(r.rdm) ? '' : '<button type="button" class="btn btn-line press" data-rdm>⭐ Roll del mes</button>'}
@@ -321,27 +400,53 @@ const rowOf = el => rows.find(r => String(r.id) === el.closest('.card').dataset.
 $('#q').oninput = render;
 $('#list').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return; const r = rowOf(b); if (!r) return;
-  if (b.matches('[data-more]')) { openId = openId === String(r.id) ? null : String(r.id); render(); return; }
+  if (b.matches('[data-more]')) { openId = openId === String(r.id) ? null : String(r.id); if (openId) openDraft(r); render(); return; }
+  const card = b.closest('.card'), redrawO = () => { draft.optsDirty = true; card.querySelector('[data-opts]').innerHTML = optsHTML(); },
+        redrawP = () => { draft.promoDirty = true; card.querySelector('[data-promo]').innerHTML = promoHTML(); };
+  if (b.matches('[data-og-add]')) { draft.opts.push({k:'', c:[], n:1, min:1}); redrawO(); card.querySelector(`[data-og-k="${draft.opts.length-1}"]`).focus(); return; }
+  if (b.matches('[data-og-del]')) { if (!confirm('¿Quitar este grupo de opciones?')) return; draft.opts.splice(+b.dataset.ogDel, 1); redrawO(); return; }
+  if (b.matches('[data-oc-del]')) { const [gi,ci] = b.dataset.ocDel.split(':').map(Number); draft.opts[gi].c.splice(ci, 1); redrawO(); return; }
+  if (b.matches('[data-oc-add]')) { const gi = +b.dataset.ocAdd, inp = card.querySelector(`[data-oc-new="${gi}"]`), v = inp.value.trim(); if (!v) { inp.focus(); return; }
+    v.split(',').map(x => x.trim()).filter(Boolean).forEach(x => draft.opts[gi].c.push(x)); redrawO(); card.querySelector(`[data-oc-new="${gi}"]`).focus(); return; }
+  if (b.matches('[data-og-req]')) { const g = draft.opts[+b.dataset.ogReq]; g.min = (g.min ?? 1) > 0 ? 0 : 1; redrawO(); return; }
+  if (b.matches('[data-pr-add]')) { draft.rolls.push(['', '', '']); redrawP(); return; }
+  if (b.matches('[data-pr-del]')) { draft.rolls.splice(+b.dataset.prDel, 1); redrawP(); return; }
+  if (b.matches('[data-pf-esp]')) { draft.esp = !draft.esp; redrawP(); return; }
   if (b.matches('[data-delph]')) { const l = photosOf(r); if (!confirm('¿Quitar esta foto del producto?')) return; l.splice(+b.dataset.delph, 1); r.foto = l.length ? l.join(' ') : '-';
     refreshPhotos(b.closest('.card'), r); await persist('Quitando foto').catch(() => {}); return; }
   if (b.matches('[data-mainph]')) { const l = photosOf(r), [f] = l.splice(+b.dataset.mainph, 1); l.unshift(f); r.foto = l.join(' ');
     refreshPhotos(b.closest('.card'), r); await persist('Cambiando foto principal').catch(() => {}); return; }
   if (b.matches('[data-ag]')) { const v = yes(r.ag) ? 'NO' : 'SI'; r.ag = v; render(); await persist(v==='SI'?'Marcando agotado':'Quitando agotado').catch(() => { r.ag = v==='SI'?'NO':'SI'; render(); }); return; }
   if (b.matches('[data-ver]')) { const v = no(r.ver) ? 'SI' : 'NO'; r.ver = v; render(); await persist(v==='SI'?'Mostrando':'Ocultando').catch(() => { r.ver = v==='SI'?'NO':'SI'; render(); }); return; }
-  if (b.matches('[data-rdm]')) { const campos = {...pending(b.closest('.card'), r), rdm:'SI'};
+  if (b.matches('[data-rdm]')) { const campos = {...pending(b.closest('.card'), r), ...draftFields(), rdm:'SI'};
     rows.forEach(x => { if (x.id) x.rdm = 'NO'; }); Object.assign(r, campos); render(); await persist('Cambiando Roll del mes').catch(() => {}); return; }
   if (b.matches('[data-del]')) { if (!confirmDel(r)) return; rows = rows.filter(x => x !== r); openId = null; render(); await persist('Borrando').catch(() => {}); return; }
   if (b.matches('[data-saveedit]')) {
-    const campos = pending(b.closest('.card'), r);
+    const campos = {...pending(b.closest('.card'), r), ...draftFields()};
+    const bad = draft && draft.opts.find(g => !g.k.trim() || !g.c.length); if (bad) { say(bad.k.trim() ? `Agrega opciones a "${bad.k}" o quita ese grupo` : 'Ponle título a cada grupo de opciones', 'err'); return; }
     openId = null; if (k0(campos)) { Object.assign(r, campos); render(); await persist('Guardando').catch(() => {}); } else render(); return;
   }
 });
 const k0 = o => Object.keys(o).length;
+function draftFields(){ if (!draft) return {}; const out = {};
+  if (draft.optsDirty) out.opc = draft.opts.length ? JSON.stringify(draft.opts.map(g => { const o = {k:g.k.trim(), c:g.c, n:g.n||1, min:g.min ?? 1}; if (g.extra) o.extra = g.extra; if (g.solo) o.solo = g.solo; return o; })) : '[]';
+  if (draft.promoDirty) { out.rolls = JSON.stringify(draft.rolls.filter(l => String(l[1]).trim()).map(l => [String(l[0]).trim(), String(l[1]).trim(), String(l[2] || '').trim()]));
+    out.big = String(draft.big).replace(/[^0-9]/g,''); out.tag = String(draft.tag).trim(); out.esp = draft.esp ? 'SI' : 'NO'; }
+  return out; }
+// lo que se escribe en el editor de opciones y de promos queda en el borrador
+$('#list').addEventListener('input', e => { const t = e.target; if (!draft) return;
+  if (t.dataset.ogK !== undefined) { draft.opts[+t.dataset.ogK].k = t.value; draft.optsDirty = true; }
+  if (t.dataset.ogX !== undefined) { draft.opts[+t.dataset.ogX].extra = Number(t.value.replace(/[^0-9]/g,'')) || 0; draft.optsDirty = true; }
+  if (t.dataset.pr !== undefined) { const [i,k] = t.dataset.pr.split(':').map(Number); draft.rolls[i][k] = t.value; draft.promoDirty = true; }
+  if (t.dataset.pf !== undefined) { draft[t.dataset.pf] = t.value; draft.promoDirty = true; }
+});
+$('#list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.ocNew !== undefined) { e.preventDefault(); e.target.closest('.og').querySelector('[data-oc-add]').click(); } });
 function pending(card, r){ const campos = {}; card.querySelectorAll('[data-f]').forEach(f => { const k = f.dataset.f, v = f.value.trim(); if (String(r[k] ?? '') !== v) campos[k] = v; }); return campos; }
 function confirmDel(r){ return window.confirm(`¿Borrar "${r.n}" de la carta?`); }
 // precio: guarda al salir del campo o con Enter
 $('#list').addEventListener('change', async e => {
   const inp = e.target;
+  if (inp.dataset.ogN !== undefined && draft) { const g = draft.opts[+inp.dataset.ogN]; g.n = +inp.value; draft.optsDirty = true; return; }
   if (inp.matches('[data-price]')) { const r = rowOf(inp), v = Number(inp.value.replace(/[^0-9]/g,'')); if (!v) { inp.value = r.p; say('Escribe solo el número, ej: 6500', 'err'); return; }
     if (v === Number(r.p)) return; const old = r.p; r.p = v; inp.value = v;
     await persist('Guardando precio').catch(() => { r.p = old; inp.value = old; }); }

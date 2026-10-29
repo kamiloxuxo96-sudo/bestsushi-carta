@@ -1,7 +1,7 @@
 // POST /api/panel → acciones del panel de Gaspar. Protegido con la clave PANEL_CLAVE (variable de entorno en Vercel).
 import { leer, escribir, subirFoto } from './_almacen.js';
 
-const CAMPOS = { cat: 80, n: 120, d: 600, p: 12, ag: 4, ver: 4, rdm: 4, id: 40, foto: 3000, opc: 600 };
+const CAMPOS = { cat: 80, n: 120, d: 3000, p: 12, ag: 4, ver: 4, rdm: 4, id: 40, foto: 3000, opc: 4000, rolls: 3000, big: 6, tag: 30, esp: 4 };
 const limpiar = rows => rows.slice(0, 500).map(r => {
   const o = {};
   for (const [k, max] of Object.entries(CAMPOS)) {

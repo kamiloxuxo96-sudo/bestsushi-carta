@@ -4,7 +4,8 @@ Sitio estático (HTML + JS, sin build) publicado en **bestsushi.cl** con Vercel.
 Cada commit a la rama `main` se publica solo en 1–2 minutos. No hay que tocar Vercel.
 
 ## Panel de Gaspar (bestsushi.cl/admin/) — lo que manda
-- Gaspar maneja desde el panel (con clave): **precio, nombre, descripción, categoría, foto, opciones, agotado hoy, mostrar en carta, Roll del mes, productos nuevos** y **Hoy** (Automático / Abierto / Cerrado, horario y aviso).
+- Gaspar maneja desde el panel (con clave): **precio, nombre, descripción, categoría, fotos (varias), opciones para elegir (proteínas, vegetales, salsas, con máximo, obligatorio y precio extra), contenido de las promociones (líneas, piezas, etiqueta, especial), cambios con costo de las promociones, agotado hoy, mostrar en carta, Roll del mes, productos nuevos** y **Hoy** (Automático / Abierto / Cerrado, horario y aviso).
+- En `carta.json` las opciones van en `opc` como JSON `[{k,c,n,min,extra,solo}]`, el contenido de una promo en `rolls` `[[cantidad, roll, relleno]]`, y la tabla de cambios en la fila de Ajustes `Extras promociones`.
 - Eso se guarda en **Vercel Blob** (`carta/carta.json`) mediante las funciones `api/panel.js` (guardar, con la clave `PANEL_CLAVE`, variable de entorno en Vercel) y `api/carta.js` (la carta lo lee al abrir). Las fotos del panel quedan en Blob (`fotos/…`).
 - **Lo que diga el panel manda sobre `menu.js`.** Si el usuario pide cambiar un precio, un agotado o el Roll del mes, dile que lo haga en el panel; cambiarlo en `menu.js` no se verá si el panel ya tiene ese producto guardado.
 - `menu.js` sigue siendo la base: fotos originales, opciones de los productos originales, promociones (lista de rolls), sugerencias del carrito, y el respaldo si el panel no responde.

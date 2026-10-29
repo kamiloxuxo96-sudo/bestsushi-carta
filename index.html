@@ -506,16 +506,29 @@ function applySettings(r){   // filas con Categoría "Ajustes"
   else if (key.startsWith('horario')) { const t = val.match(/(\d{1,2})(?:[:.h](\d{2}))?\D+(\d{1,2})(?:[:.h](\d{2}))?/);
     if (t) { const f = (h,mm) => String(+h).padStart(2,'0') + ':' + (mm || '00'); HOURS.open = f(t[1],t[2]); HOURS.close = f(t[3],t[4]); } }
   else if (key.startsWith('aviso')) SETTINGS.aviso = val;
+  else if (key.startsWith('extras')) { try { const l = JSON.parse(val); const pc = MENU.find(c => c.promo); if (pc && Array.isArray(l)) pc.extras = l.filter(Array.isArray).map(x => [String(x[0]), String(x[1])]); } catch(e) {} }
 }
 /* foto subida desde el panel (reemplaza las del repo) y opciones escritas como "Proteína: Pollo, Camarón; Salsa: Soya, Teriyaki" */
 function extra(it, r){
   const f = String(r.foto ?? '').trim();
   if (f === '-') { it.imgs = []; delete it.img; }   // Gaspar quitó todas las fotos
   else { const list = f.split(/\s+/).filter(u => /^https:\/\/[^\s'"()<>\\]+$/.test(u) || /^[a-z0-9][a-z0-9-]{0,80}$/.test(u)); if (list.length) { it.imgs = list; delete it.img; } }
-  const o = String(r.opc ?? '').trim();
-  if (o){ const groups = o.split(/[;\n]+/).map(g => { const [k, ...rest] = g.split(':'); const c = (rest.length ? rest.join(':') : k).split(',').map(x => x.trim()).filter(Boolean);
+  const o = String(r.opc ?? '').trim(), int = (v, a, b) => Math.max(a, Math.min(b, parseInt(v, 10) || 0));
+  if (o.startsWith('[')){   // opciones armadas en el panel: [{k, c:[...], n, min, extra, solo}]
+    let g = []; try { g = JSON.parse(o); } catch(e) {}
+    g = (Array.isArray(g) ? g : []).map(x => x && Array.isArray(x.c) ? {k:String(x.k || 'Elige').slice(0,60), c:x.c.map(String).filter(Boolean).slice(0,30),
+      n:int(x.n || 1, 1, 10), min:int(x.min ?? 1, 0, 10), ...(x.extra ? {extra:int(x.extra, 0, 100000)} : {}), ...(x.solo ? {solo:int(x.solo, 1, 10)} : {})} : null).filter(x => x && x.c.length);
+    if (g.length){ OPTS['panel_' + it.id] = g; it.o = 'panel_' + it.id; } else { delete it.o; }
+  } else if (o){ const groups = o.split(/[;\n]+/).map(g => { const [k, ...rest] = g.split(':'); const c = (rest.length ? rest.join(':') : k).split(',').map(x => x.trim()).filter(Boolean);
       return c.length ? {k: rest.length ? k.trim() : 'Elige', c} : null; }).filter(Boolean);
-    if (groups.length){ OPTS['planilla_' + it.id] = groups; it.o = 'planilla_' + it.id; } }
+    if (groups.length){ OPTS['panel_' + it.id] = groups; it.o = 'panel_' + it.id; } }
+  // promociones: contenido, piezas, etiqueta y si es especial
+  const rl = String(r.rolls ?? '').trim();
+  if (rl.startsWith('[')) { try { const l = JSON.parse(rl); if (Array.isArray(l)) it.rolls = l.filter(Array.isArray).map(x => [String(x[0] ?? ''), String(x[1] ?? ''), String(x[2] ?? '')]).filter(x => x[1]); } catch(e) {} }
+  if (String(r.big ?? '').trim()) it.big = String(r.big).replace(/[^0-9]/g,'').slice(0,4);
+  if (r.tag != null && String(r.tag).trim() !== '') it.tag = String(r.tag).slice(0,24);
+  if (r.esp != null && String(r.esp).trim() !== '') { if (isYes(r.esp)) it.tipo = 'especial'; else delete it.tipo; }
+  if (it.rolls && !it.big) it.big = String(it.rolls.reduce((a,x) => a + (parseInt(x[0],10) || 0), 0) || '');
 }
 function applySheet(rows){
   const map = {}; MENU.forEach(c => c.items.forEach(i => map[i.id] = i));
@@ -673,7 +686,7 @@ function renderMenu(){
     if (c.promo) return `<section class="sec" id="${c.id}">${head}<div class="promos">${[...c.items].sort((a,b) => (b.tipo==='especial') - (a.tipo==='especial')).map(i => `
       <button class="promo press ${i.tipo==='especial'?'esp':''} ${i.agotado?'off':''}" type="button" data-item="${i.id}" aria-label="${esc(i.n)}, ${fmt(i.p)}">${i.agotado?'<span class="soldout">Agotado hoy</span>':''}
         <div class="ph" style="${photoStyle(i)}">${pics(i).length?'':koi()}</div>${i.tag?`<span class="ptag">${i.tipo==='especial'?'★ ':''}${esc(i.tag)}</span>`:''}
-        <div class="bd"><div class="big">${i.big}<span>piezas</span></div><div class="nm">${esc(promoName(i))}</div>
+        <div class="bd"><div class="big">${i.big||''}<span>piezas</span></div><div class="nm">${esc(promoName(i))}</div>
         ${i.rolls ? `<ul class="rl">${i.rolls.map(r => `<li><b>${esc(r[0])}</b><span>${esc(r[1])}${r[2]?` <em>· ${esc(r[2])}</em>`:''}</span></li>`).join('')}</ul>` : `<div class="d">${esc(i.d||'')}</div>`}
         <div class="row"><span class="pr">${fmt(i.p)}</span><span class="plus" aria-hidden="true">+</span></div></div>
       </button>`).join('')}</div></section>`;
@@ -769,7 +782,7 @@ function openItem(id){
 const gMin = g => g.min ?? (g.n || 1);
 function gMax(opts, gi, sel){ const g = opts[gi]; if (g.solo && opts.every((o,k) => k === gi || o.extra || !(sel[k]||[]).length)) return g.solo; return g.n || 1; }
 function grpLabel(g){ if (g.extra) return `opcional · hasta ${g.n||1}`; const n = g.n || 1, m = gMin(g);
-  if (m === 0) return 'opcional'; return m === n ? `Elige ${n}` : `Elige ${m} a ${n}`; }
+  if (m === 0) return n > 1 ? `opcional · hasta ${n}` : 'opcional'; return m === n ? `Elige ${n}` : `Elige ${m} a ${n}`; }
 function unitPrice(i, sel){ return i.p + (OPTS[i.o]||[]).reduce((a,g,gi) => a + (g.extra ? g.extra * (sel[gi]||[]).length : 0), 0); }
 function optText(opts, sel){ return opts.map((g,gi) => { const s = sel[gi] || [];
   if (g.extra) return s.length ? `+ ${s.join(' y ')}` : '';
