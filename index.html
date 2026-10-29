@@ -200,6 +200,8 @@ footer a{color:var(--blue-ink);font-weight:700;text-decoration:none}
 .intro-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .ghost{border:1.5px solid rgba(255,255,255,.45);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:10px 16px;font-weight:700;font-size:13.5px;display:inline-flex;gap:8px;align-items:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .again{max-width:720px;margin:12px auto 0;padding:0 16px}
+.aviso{max-width:688px;margin:12px 16px 0;padding:12px 14px;border-radius:var(--r-md);background:#FFF4E5;border:1px solid #F7C98B;color:#7A3E00;font-weight:700;font-size:14px;text-align:center}
+@media (min-width:720px){.aviso{margin:12px auto 0}}
 .again-in{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 12px 12px 14px}
 .again-in .tx{flex:1;min-width:0}
 .again-in b{display:block;font-size:14px}
@@ -401,6 +403,7 @@ footer a{color:var(--blue-ink);font-weight:700;text-decoration:none}
 <p class="hint" aria-hidden="true">Toca el agua</p>
 </div>
 <div class="feat" id="feat"></div>
+<div class="aviso" id="aviso" role="status" hidden></div>
 <div class="again" id="again" hidden></div>
 
 
@@ -488,6 +491,59 @@ footer a{color:var(--blue-ink);font-weight:700;text-decoration:none}
 
 <script src="menu.js"></script>
 <script>
+/* ======================= PLANILLA DE GOOGLE =======================
+   Gaspar maneja precios, agotados, qué se muestra, Roll del mes y productos simples
+   desde una planilla de Google (PLANILLA en menu.js). La carta la lee al abrir.
+   Si la planilla no responde, se usa la última copia guardada o lo que dice menu.js. */
+const norm = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const isYes = v => /^(si|x|true|verdadero|1|ok|✓|✔)/.test(norm(v));
+const isNo = v => /^(no|false|falso|0)$/.test(norm(v));
+const toNum = v => typeof v === 'number' ? Math.round(v) : (parseInt(String(v ?? '').replace(/[^0-9]/g,''), 10) || 0);
+function sheetRows(r){
+  if (!r || r.status === 'error' || !r.table) throw new Error('planilla sin datos');
+  let head = r.table.cols.map(c => norm(c.label));
+  let rows = r.table.rows.map(row => (row.c || []).map(c => c ? (c.v ?? c.f ?? '') : ''));
+  if (!head.some(Boolean) && rows.length) head = rows.shift().map(norm);   // por si Google no detecta encabezados
+  const col = k => head.findIndex(h => h.startsWith(k));
+  const C = {cat:col('categ'), n:col('producto'), d:col('descrip'), p:col('precio'), ag:col('agotado'), ver:col('mostrar'), rdm:col('roll'), id:col('codigo')};
+  return rows.map(r => Object.fromEntries(Object.entries(C).map(([k,i]) => [k, i >= 0 ? r[i] : ''])));
+}
+const SETTINGS = {estado:'', aviso:''};
+function applySettings(r){   // filas con Categoría "Ajustes"
+  const key = norm(r.n), val = String(r.d ?? '').trim();
+  if (key.startsWith('hoy') || key.startsWith('estado')) { const v = norm(val); SETTINGS.estado = v.startsWith('abiert') ? 'abierto' : v.startsWith('cerrad') ? 'cerrado' : ''; }
+  else if (key.startsWith('horario')) { const t = val.match(/(\d{1,2})(?:[:.h](\d{2}))?\D+(\d{1,2})(?:[:.h](\d{2}))?/);
+    if (t) { const f = (h,mm) => String(+h).padStart(2,'0') + ':' + (mm || '00'); HOURS.open = f(t[1],t[2]); HOURS.close = f(t[3],t[4]); } }
+  else if (key.startsWith('aviso')) SETTINGS.aviso = val;
+}
+function applySheet(rows){
+  const map = {}; MENU.forEach(c => c.items.forEach(i => map[i.id] = i));
+  let rdm = null, k = 0;
+  rows.forEach(r => {
+    if (norm(r.cat).startsWith('ajuste')) { applySettings(r); return; }
+    const id = String(r.id ?? '').trim(), name = String(r.n ?? '').trim(), desc = String(r.d ?? '').trim(), price = toNum(r.p);
+    if (id && map[id]){ const it = map[id];
+      if (name) it.n = name; if (desc && !it.rolls) it.d = desc; if (price > 0) it.p = price;
+      it.agotado = isYes(r.ag); if (String(r.ver ?? '').trim()) it.oculto = isNo(r.ver);
+      if (!rdm && isYes(r.rdm)) rdm = id;
+    } else if (!id && name && price > 0){   // producto nuevo escrito por Gaspar
+      const cn = norm(r.cat) || 'otros';
+      let cat = MENU.find(c => norm(c.name.join('')) === cn);
+      if (!cat){ cat = {id:'cat-' + cn.replace(/[^a-z0-9]+/g,'-'), name:[String(r.cat || 'Otros').trim(), ''], note:'', items:[]};
+        const b = MENU.findIndex(c => c.id === 'bebidas'); MENU.splice(b < 0 ? MENU.length : b, 0, cat); }
+      const it = {id:'n' + (++k), n:name, p:price, agotado:isYes(r.ag), oculto:isNo(r.ver)}; if (desc) it.d = desc;
+      cat.items.push(it); if (!rdm && isYes(r.rdm)) rdm = it.id; map[it.id] = it;
+    }
+  });
+  if (rdm && map[rdm]){ const it = map[rdm], i0 = FEATURED.findIndex(f => f[0] === rdm), photo = (it.imgs || (it.img ? [it.img] : []))[0];
+    if (i0 >= 0 || photo){
+      if (FEATURED[0] && FEATURED[0][2] === 'Roll del mes' && FEATURED[0][0] !== rdm) FEATURED.shift();
+      const j = FEATURED.findIndex(f => f[0] === rdm), e = j >= 0 ? FEATURED.splice(j,1)[0] : [rdm, photo, 'Roll del mes'];
+      e[2] = 'Roll del mes'; FEATURED.unshift(e);
+    }
+  }
+}
+function BOOT(){
 /* ======================= LÓGICA ======================= */
 const $ = s => document.querySelector(s);
 const fmt = n => '$' + n.toLocaleString('es-CL');
@@ -508,9 +564,12 @@ const photoStyle = i => pics(i).length ? `background-image:url('${IMG}${pics(i)[
 (function(){
   const now = new Date(), d = now.getDay(), m = now.getHours()*60 + now.getMinutes();
   const [oh,om] = HOURS.open.split(':').map(Number), [ch,cm] = HOURS.close.split(':').map(Number);
-  const open = HOURS.days.includes(d) && m >= oh*60+om && m < ch*60+cm;
-  $('#statusTxt').textContent = open ? `Abierto · hasta las ${HOURS.close}` : (HOURS.days.includes(d) && m < oh*60+om ? `Abre hoy ${HOURS.open}` : 'Cerrado · Mar a Dom 17:00');
+  const forced = SETTINGS.estado;   // 'abierto' / 'cerrado' desde la planilla; si no, automático
+  const open = forced === 'abierto' ? true : forced === 'cerrado' ? false : (HOURS.days.includes(d) && m >= oh*60+om && m < ch*60+cm);
+  $('#statusTxt').textContent = forced === 'cerrado' ? 'Cerrado por hoy' : open ? `Abierto · hasta las ${HOURS.close}` : (HOURS.days.includes(d) && m < oh*60+om ? `Abre hoy ${HOURS.open}` : `Cerrado · Mar a Dom ${HOURS.open}`);
   if (!open) $('#status').classList.add('closed');
+  const aviso = SETTINGS.aviso || (forced === 'cerrado' ? 'Hoy no estamos atendiendo. ¡Te esperamos pronto!' : '');
+  if (aviso) { const b = $('#aviso'); b.textContent = aviso; b.hidden = false; }
 })();
 
 /* estanque: koi de línea nadando (mismo trazo que el logo); tocar crea ondas y los koi se apartan */
@@ -1007,6 +1066,19 @@ $('#partyBack').onclick = () => $('#party').classList.remove('on');
 
 let tt; function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('on'), 1800); }
 refresh();
+window.__bs = {openItem, hide, code};
+}
+(function(){
+  const KEYP = 'bestsushi-planilla-v1'; let started = false, cached = null;
+  try { cached = JSON.parse(localStorage.getItem(KEYP) || 'null'); } catch(e) {}
+  const go = rows => { if (started) return; started = true; try { if (rows) applySheet(rows); } catch(e) { console.warn('Planilla:', e); } BOOT(); };
+  if (typeof PLANILLA === 'undefined' || !PLANILLA) { go(null); return; }
+  window.__bsSheet = r => { try { const rows = sheetRows(r); try { localStorage.setItem(KEYP, JSON.stringify(rows)); } catch(e) {} go(rows); } catch(e) { console.warn('Planilla:', e); go(cached); } };
+  const sc = document.createElement('script');
+  sc.src = `https://docs.google.com/spreadsheets/d/${PLANILLA}/gviz/tq?tqx=responseHandler:__bsSheet&headers=1&gid=0&_=${Date.now()}`;
+  sc.onerror = () => go(cached); document.head.appendChild(sc);
+  setTimeout(() => go(cached), 3500);   // si Google tarda, la carta abre igual
+})();
 </script>
 
 </body>

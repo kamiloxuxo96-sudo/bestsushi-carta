@@ -3,6 +3,13 @@
 Sitio estático (HTML + JS, sin build) publicado en **bestsushi.cl** con Vercel.
 Cada commit a la rama `main` se publica solo en 1–2 minutos. No hay que tocar Vercel.
 
+## Planilla de Google (lo que maneja Gaspar)
+La carta lee al abrir la planilla **"Bestsushi · Carta (precios y agotados)"** (su ID está en `PLANILLA`, en `menu.js`).
+- Desde ahí se cambian: **precio, nombre, descripción, agotado hoy, mostrar en carta, Roll del mes**, productos simples nuevos (fila sin código) y los **Ajustes**: `Hoy estamos` (Automático / Abierto / Cerrado), `Horario` (ej. `17:00 - 22:30`) y `Aviso` (texto que aparece arriba de la carta).
+- **Lo que diga la planilla manda sobre `menu.js`.** Si el usuario pide cambiar un precio o un agotado, recuérdale que lo haga en la planilla; cambiarlo en `menu.js` no se verá mientras la planilla tenga otro valor.
+- `menu.js` sigue siendo la base: fotos, opciones a elección, promociones, sugerencias y el respaldo si la planilla no responde.
+- Al agregar un producto nuevo en `menu.js`, agrégalo también como fila en la planilla con su código (`id`), o pídele al usuario que lo haga.
+
 ## Archivos
 - `menu.js` → **todo el contenido**: productos, precios, descripciones, fotos, opciones "a elección", horario, número de WhatsApp y destacados (Roll del mes). Casi todos los cambios se hacen aquí.
 - `index.html` → diseño y funcionamiento. **No modificar** salvo que el usuario pida un cambio de diseño explícito.
