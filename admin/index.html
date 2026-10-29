@@ -90,6 +90,14 @@ main{padding:14px 0 120px}
 .fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,95,212,.18)}
 .photo{display:flex;gap:12px;align-items:center}
 .photo .thumb{width:84px;height:84px}
+.gal{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.gp{position:relative;width:84px}
+.gp .thumb{width:84px;height:84px}
+.gp .x{position:absolute;top:-7px;right:-7px;width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:#B42318;color:#fff;font-size:15px;font-weight:800;display:grid;place-items:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.gp .main{display:block;margin-top:5px;text-align:center;font-size:11px;font-weight:800;color:var(--blue-ink)}
+.gp button.main{border:0;background:transparent;padding:2px;width:100%;color:var(--muted);text-decoration:underline}
+.addph{width:84px;height:84px;border:2px dashed #B7C4DA;border-radius:12px;display:grid;place-items:center;text-align:center;font-size:11.5px;font-weight:800;color:var(--blue-ink);background:#F7F9FD;position:relative;overflow:hidden;line-height:1.2}
+.addph input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .btn{border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn-blue{background:var(--blue);color:#fff}
 .btn-line{background:var(--paper);color:var(--blue-ink);border:1.5px solid var(--line)}
@@ -181,9 +189,8 @@ main{padding:14px 0 120px}
         <div class="fld"><label for="nName">Nombre</label><input id="nName" required placeholder="Ej: Roll acevichado de pulpo"></div>
         <div class="fld"><label for="nDesc">Descripción</label><textarea id="nDesc" rows="2" placeholder="Ingredientes, cuántas piezas…"></textarea></div>
         <div class="fld"><label for="nPrice">Precio</label><div class="price" style="width:100%"><span>$</span><input id="nPrice" inputmode="numeric" required placeholder="6500"></div></div>
-        <div class="fld"><label>Foto</label>
-          <div class="photo"><span class="thumb" id="nThumb"><span class="koi"></span></span>
-            <label class="btn btn-line filebtn press">📷 Elegir foto<input type="file" accept="image/*" id="nFile"></label></div></div>
+        <div class="fld"><label>Fotos</label>
+          <div class="gal" id="nGal"></div><small>Puedes elegir varias. La primera es la principal.</small></div>
         <div class="fld"><label for="nOpc">Opciones para elegir (opcional)</label><textarea id="nOpc" rows="2" placeholder="Proteína: Pollo, Camarón, Salmón"></textarea>
           <small>Una por línea: "Título: opción, opción". El cliente tendrá que elegir una de cada línea.</small></div>
         <div class="row-btns"><button class="btn btn-blue press" type="submit" id="nSave">Agregar a la carta</button></div>
@@ -212,7 +219,14 @@ let rows = [], openId = null;
 const BASE = {}; (typeof MENU !== 'undefined' ? MENU : []).forEach(c => c.items.forEach(i => BASE[i.id] = {...i, catName: c.name.join('')}));
 const pics = i => i ? (i.imgs || (i.img ? [i.img] : [])) : [];
 const picUrl = p => /^https?:/.test(p) ? p : '../fotos/' + p + '.jpg';
-const photoOf = r => { const f = String(r.foto || '').trim().split(/\s+/)[0]; if (/^https:/.test(f)) return f; const p = pics(BASE[r.id]); return p.length ? picUrl(p[0]) : ''; };
+const photosOf = r => { const t = String(r.foto || '').trim(); if (t === '-') return []; const f = t.split(/\s+/).filter(Boolean); return f.length ? f : pics(BASE[r.id]); };
+function refreshPhotos(card, r){ card.querySelector('[data-gal]').innerHTML = galHTML(r); const ph = photoOf(r), th = card.querySelector('.ph .thumb');
+  th.style.backgroundImage = ph ? `url('${ph}')` : ''; th.innerHTML = ph ? '' : '<span class="koi"></span>'; }
+const photoOf = r => { const l = photosOf(r); return l.length ? picUrl(l[0]) : ''; };
+const galHTML = r => photosOf(r).map((f,k) => `<div class="gp"><span class="thumb" style="background-image:url('${esc(picUrl(f))}')"></span>
+    <button type="button" class="x press" data-delph="${k}" aria-label="Quitar foto">✕</button>
+    ${k ? `<button type="button" class="main" data-mainph="${k}">Poner primera</button>` : '<span class="main">Principal</span>'}</div>`).join('')
+  + `<label class="addph press">📷<br>Agregar<br>fotos<input type="file" accept="image/*" multiple data-file></label>`;
 const optsText = id => { const b = BASE[id]; if (!b || !b.o || !OPTS[b.o]) return ''; return OPTS[b.o].map(g => `${g.k}: ${g.c.join(', ')}`).join('\n'); };
 
 /* ---------- comunicación con la planilla ---------- */
@@ -290,12 +304,11 @@ function render(){
   $('#list').innerHTML = html;
 }
 function editHTML(r){
-  const ph = photoOf(r), base = optsText(r.id);
+  const base = optsText(r.id);
   return `<div class="fld"><label>Nombre</label><input data-f="n" value="${esc(r.n)}"></div>
     <div class="fld"><label>Descripción</label><textarea data-f="d" rows="2" placeholder="${BASE[r.id]&&BASE[r.id].rolls?'(las promociones muestran su lista de rolls)':''}">${esc(r.d)}</textarea></div>
     <div class="fld"><label>Categoría</label><select data-f="cat">${cats().map(c => `<option${c===r.cat?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
-    <div class="fld"><label>Foto</label><div class="photo"><span class="thumb" data-thumb style="${ph?`background-image:url('${esc(ph)}')`:''}">${ph?'':'<span class="koi"></span>'}</span>
-      <label class="btn btn-line filebtn press">📷 Cambiar foto<input type="file" accept="image/*" data-file></label></div></div>
+    <div class="fld"><label>Fotos</label><div class="gal" data-gal>${galHTML(r)}</div><small>La primera es la que se ve en la carta. Si hay varias, el cliente las desliza.</small></div>
     <div class="fld"><label>Opciones para elegir</label><textarea data-f="opc" rows="2" placeholder="${esc(base || 'Proteína: Pollo, Camarón')}">${esc(r.opc)}</textarea>
       <small>${base ? 'Vacío = se mantienen las opciones actuales (las de arriba en gris).' : 'Una por línea: "Título: opción, opción". Opcional.'}</small></div>
     <div class="row-btns">
@@ -309,6 +322,10 @@ $('#q').oninput = render;
 $('#list').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return; const r = rowOf(b); if (!r) return;
   if (b.matches('[data-more]')) { openId = openId === String(r.id) ? null : String(r.id); render(); return; }
+  if (b.matches('[data-delph]')) { const l = photosOf(r); if (!confirm('¿Quitar esta foto del producto?')) return; l.splice(+b.dataset.delph, 1); r.foto = l.length ? l.join(' ') : '-';
+    refreshPhotos(b.closest('.card'), r); await persist('Quitando foto').catch(() => {}); return; }
+  if (b.matches('[data-mainph]')) { const l = photosOf(r), [f] = l.splice(+b.dataset.mainph, 1); l.unshift(f); r.foto = l.join(' ');
+    refreshPhotos(b.closest('.card'), r); await persist('Cambiando foto principal').catch(() => {}); return; }
   if (b.matches('[data-ag]')) { const v = yes(r.ag) ? 'NO' : 'SI'; r.ag = v; render(); await persist(v==='SI'?'Marcando agotado':'Quitando agotado').catch(() => { r.ag = v==='SI'?'NO':'SI'; render(); }); return; }
   if (b.matches('[data-ver]')) { const v = no(r.ver) ? 'SI' : 'NO'; r.ver = v; render(); await persist(v==='SI'?'Mostrando':'Ocultando').catch(() => { r.ver = v==='SI'?'NO':'SI'; render(); }); return; }
   if (b.matches('[data-rdm]')) { const campos = {...pending(b.closest('.card'), r), rdm:'SI'};
@@ -328,9 +345,10 @@ $('#list').addEventListener('change', async e => {
   if (inp.matches('[data-price]')) { const r = rowOf(inp), v = Number(inp.value.replace(/[^0-9]/g,'')); if (!v) { inp.value = r.p; say('Escribe solo el número, ej: 6500', 'err'); return; }
     if (v === Number(r.p)) return; const old = r.p; r.p = v; inp.value = v;
     await persist('Guardando precio').catch(() => { r.p = old; inp.value = old; }); }
-  if (inp.matches('[data-file]') && inp.files[0]) { const r = rowOf(inp), card = inp.closest('.card');
-    try { const url = await run('Subiendo foto', async () => { const b64 = await shrink(inp.files[0]); return (await api('foto', {base64:b64, nombre:String(r.n)})).url; });
-      r.foto = url; card.querySelector('[data-thumb]').style.backgroundImage = `url('${url}')`; card.querySelector('[data-thumb]').innerHTML = ''; await persist('Guardando foto'); } catch(x) {} }
+  if (inp.matches('[data-file]') && inp.files.length) { const r = rowOf(inp), card = inp.closest('.card'), files = [...inp.files].slice(0, 8);
+    try { const urls = await run(files.length > 1 ? `Subiendo ${files.length} fotos` : 'Subiendo foto', async () => { const out = [];
+        for (const f of files) out.push((await api('foto', {base64: await shrink(f), nombre:String(r.n)})).url); return out; });
+      r.foto = [...photosOf(r), ...urls].join(' '); refreshPhotos(card, r); await persist('Guardando fotos'); } catch(x) {} }
 });
 $('#list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-price]')) e.target.blur(); });
 
@@ -368,8 +386,12 @@ $('#saveHoy').onclick = async () => {
 const cats = () => [...new Set(products().map(r => String(r.cat || '').trim()).filter(Boolean))];
 function fillCats(){ $('#nCat').innerHTML = cats().map(c => `<option>${esc(c)}</option>`).join('') + '<option value="__otra">+ Categoría nueva…</option>'; }
 $('#nCat').onchange = () => $('#nCatOtraF').hidden = $('#nCat').value !== '__otra';
-let nPhoto = null;
-$('#nFile').onchange = async () => { const f = $('#nFile').files[0]; if (!f) return; try { nPhoto = await shrink(f); $('#nThumb').style.backgroundImage = `url('data:image/jpeg;base64,${nPhoto}')`; $('#nThumb').innerHTML = ''; } catch(e) { say(e.message, 'err'); } };
+let nPhotos = [];
+function nGal(){ $('#nGal').innerHTML = nPhotos.map((b,k) => `<div class="gp"><span class="thumb" style="background-image:url('data:image/jpeg;base64,${b}')"></span><button type="button" class="x press" data-ndel="${k}" aria-label="Quitar foto">✕</button>${k ? '' : '<span class="main">Principal</span>'}</div>`).join('')
+  + `<label class="addph press">📷<br>Agregar<br>fotos<input type="file" accept="image/*" multiple id="nFile"></label>`; }
+nGal();
+$('#nGal').addEventListener('change', async e => { if (e.target.id !== 'nFile') return; try { for (const f of [...e.target.files].slice(0, 8)) nPhotos.push(await shrink(f)); } catch(x) { say(x.message, 'err'); } nGal(); });
+$('#nGal').addEventListener('click', e => { const b = e.target.closest('[data-ndel]'); if (b) { nPhotos.splice(+b.dataset.ndel, 1); nGal(); } });
 $('#newForm').onsubmit = async e => {
   e.preventDefault();
   const cat = $('#nCat').value === '__otra' ? $('#nCatOtra').value.trim() : $('#nCat').value, p = Number($('#nPrice').value.replace(/[^0-9]/g,''));
@@ -378,10 +400,10 @@ $('#newForm').onsubmit = async e => {
   $('#nSave').disabled = true;
   try {
     const campos = {cat, n:$('#nName').value.trim(), d:$('#nDesc').value.trim(), p, opc:$('#nOpc').value.trim()};
-    if (nPhoto) campos.foto = await run('Subiendo foto', async () => (await api('foto', {base64:nPhoto, nombre:campos.n})).url);
+    if (nPhotos.length) campos.foto = await run(nPhotos.length > 1 ? `Subiendo ${nPhotos.length} fotos` : 'Subiendo foto', async () => { const out = []; for (const b of nPhotos) out.push((await api('foto', {base64:b, nombre:campos.n})).url); return out.join(' '); });
     const nuevo = {...campos, id:'n' + Date.now().toString(36), ag:'NO', ver:'SI', rdm:'NO'};
     rows.push(nuevo); await persist('Agregando').catch(e => { rows = rows.filter(x => x !== nuevo); throw e; });
-    e.target.reset(); nPhoto = null; $('#nThumb').style.backgroundImage = ''; $('#nThumb').innerHTML = '<span class="koi"></span>'; $('#nCatOtraF').hidden = true;
+    e.target.reset(); nPhotos = []; nGal(); $('#nCatOtraF').hidden = true;
     fillCats(); render(); document.querySelector('[data-tab="prod"]').click();
   } catch(x) {}
   $('#nSave').disabled = false;

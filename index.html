@@ -509,7 +509,9 @@ function applySettings(r){   // filas con Categoría "Ajustes"
 }
 /* foto subida desde el panel (reemplaza las del repo) y opciones escritas como "Proteína: Pollo, Camarón; Salsa: Soya, Teriyaki" */
 function extra(it, r){
-  const f = String(r.foto ?? '').trim(); const urls = f.split(/\s+/).filter(u => /^https:\/\/[^\s'"()<>\\]+$/.test(u)); if (urls.length) { it.imgs = urls; delete it.img; }
+  const f = String(r.foto ?? '').trim();
+  if (f === '-') { it.imgs = []; delete it.img; }   // Gaspar quitó todas las fotos
+  else { const list = f.split(/\s+/).filter(u => /^https:\/\/[^\s'"()<>\\]+$/.test(u) || /^[a-z0-9][a-z0-9-]{0,80}$/.test(u)); if (list.length) { it.imgs = list; delete it.img; } }
   const o = String(r.opc ?? '').trim();
   if (o){ const groups = o.split(/[;\n]+/).map(g => { const [k, ...rest] = g.split(':'); const c = (rest.length ? rest.join(':') : k).split(',').map(x => x.trim()).filter(Boolean);
       return c.length ? {k: rest.length ? k.trim() : 'Elige', c} : null; }).filter(Boolean);
