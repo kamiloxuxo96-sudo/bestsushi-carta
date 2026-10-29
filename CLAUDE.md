@@ -10,9 +10,12 @@ Cada commit a la rama `main` se publica solo en 1–2 minutos. No hay que tocar 
 
 ## Cómo hacer los cambios más comunes
 - **Cambiar un precio:** en `menu.js`, busca el producto por su nombre (`n:'...'`) y cambia `p:`. Solo números, sin puntos ni `$` (ej. `p:6900`).
-- **Ocultar un producto por un día** (se acabó un ingrediente): agrega `oculto:true` al producto. Para mostrarlo de nuevo, bórralo. No borres el producto.
+- **Se acabó por hoy:** agrega `agotado:true` al producto. Se ve en gris con "Agotado hoy" y no se puede pedir. Al día siguiente, bórralo.
+- **Ocultar un producto** (ya no se vende o falta información): agrega `oculto:true`. Para mostrarlo de nuevo, bórralo. No borres el producto.
+- **Agregados con precio** (ej. vegetal extra en handrolls): en `OPTS`, el grupo lleva `extra:500` y el precio se suma solo.
 - **Agregar un producto:** copia uno de la misma categoría, dale un `id` nuevo y único (ej. `e12`), nombre, precio y descripción.
 - **Cambiar el Roll del mes:** en `FEATURED`, el primer elemento es el Roll del mes: `['id-del-producto','nombre-foto','Roll del mes']`. La cuenta regresiva de días es automática.
+- **Sugerencias del carrito ("¿Le sumas algo?"):** en `menu.js`, lista `SUGERIDOS`: `['id','opción','nombre corto']`. Solo aparecen si el cliente aún no los tiene en el pedido.
 - **Horario:** `HOURS` (días: 0=domingo, 1=lunes … 6=sábado; horas `'HH:MM'`).
 - **WhatsApp:** `WA_NUMBER` con código de país, sin `+` ni espacios.
 
